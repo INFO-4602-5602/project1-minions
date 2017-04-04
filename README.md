@@ -6,7 +6,7 @@ Projects may be submitted up to 3 days late, with a 10% penalty per day.
 <h2>Overview: </h2>
 You've been provided consumer data by Zayo. They simply want to understand what's going on in all of this data! Your goal is to create a series of interactive visualizations that can be used to explore different aspects of this data.
 
-This repository contains four datasets that reflect a subset of this data. You will use a combination of these datasets to build these tools. All code created as part of this project will remain yours to share as you see fit. None will be provided to Zayo without your express consent.
+This repository contains five datasets that reflect a subset of this data. You will use a combination of these datasets to build these tools. All code created as part of this project will remain yours to share as you see fit. None will be provided to Zayo without your express consent.
 
 <h2>Minimum Requirements:</h2> 
 Your project must:
