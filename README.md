@@ -1,6 +1,6 @@
 # Project1
 <h2>Project 1:</h2>
-Due 4.14.2017 by 11:59pm through GitHub Classroom 
+Due 4.16.2017 by 11:59pm through GitHub Classroom 
 Projects may be submitted up to 3 days late, with a 10% penalty per day.
 
 <h2>Overview: </h2>
