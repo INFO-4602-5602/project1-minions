@@ -3,8 +3,7 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template
-from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema, \
-    Building
+from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema
 import csv
 import os
 from re import sub
@@ -192,8 +191,6 @@ def initialize_services():
                 print "a data format exception occurred"
                 print l
         db_session.commit()
-
-
 
 
 @app.route('/')

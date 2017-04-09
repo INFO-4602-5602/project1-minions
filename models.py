@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Table
+from sqlalchemy import ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -118,11 +118,6 @@ class Services(Base):
     building_id = Column(String(120), ForeignKey('Building.building_id'))
 
 # Schema
-
-
-class BuildingSchema(ModelSchema):
-    class Meta:
-        model = Building
 
 
 class AccountSchema(ModelSchema):
