@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template
-from models import db_session, BuildingSchema, AccountSchema, SitesSchema
+from models import db_session, Building, BuildingSchema, AccountSchema, SitesSchema
 import csv
 import os
 from re import sub
@@ -25,6 +25,13 @@ def shutdown_session(exception = None):
 # ----------------------------------------------------------------------------#
 # Controllers.
 # ----------------------------------------------------------------------------#
+
+
+@app.route('/testBuilding')
+def testBuilding():
+    result = Building().query.filter(Building.building_id == 'Bldg-115475').all()
+    bs = BuildingSchema()
+    return bs.dumps(result[0]).data
 
 
 @app.route('/initialize')
