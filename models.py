@@ -1,3 +1,4 @@
+from sqlalchemy import ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -36,11 +37,48 @@ class Building(Base):
         return "<Building: " + self.building_id + ">"
 
 
+class Accounts(Base):
+    __tablename__ = 'Accounts'
+
+    account_id = Column(String(120), primary_key=True)
+    industry = Column(String(120))
+    vertical = Column(String(120))
+    total_brr = Column(Float)
+    annual_revenue = Column(Float)
+    number_of_employees = Column(Integer)
+    dandb_revenue = Column(Float)
+    dandb_total_employees = Column(Integer)
+
+    def __repr__(self):
+        return "<Accounts: " + self.account_id + ">"
+
+
+class Sites(Base):
+    __tablename__ = 'Sites'
+
+    site_id = Column(String(120), primary_key=True)
+    account_id = Column(String(120), ForeignKey('Accounts.account_id'))
+    building_id = Column(String(120), ForeignKey('Building.building_id'))
+
+    def __repr__(self):
+        return "<Sites: " + self.site_id + ">"
+
+
 # Schema
 
 class BuildingSchema(ModelSchema):
     class Meta:
         model = Building
+
+
+class AccountSchema(ModelSchema):
+    class Meta:
+        model = Accounts
+
+
+class SitesSchema(ModelSchema):
+    class Meta:
+        model = Sites
 
 
 # Create tables.
