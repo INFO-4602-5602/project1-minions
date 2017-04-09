@@ -3,7 +3,8 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template
-from models import db_session, Building, BuildingSchema, AccountSchema, SitesSchema
+from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema, \
+    Building
 import csv
 import os
 from re import sub
@@ -39,6 +40,9 @@ def initialize():
     initialize_buildings()
     initialize_accounts()
     initialize_sites()
+    initialize_cpq()
+    initialize_opportunity()
+    initialize_services()
     return render_template('pages/placeholder.home.html')
 
 
@@ -88,7 +92,7 @@ def initialize_accounts():
                 b = acs.load(l, session=db_session).data
                 db_session.add(b)
             except:
-                print "a data format exception occured"
+                print "a data format exception occurred"
                 print l
 
     db_session.commit()
@@ -108,10 +112,88 @@ def initialize_sites():
                 b.building_id = l['building_id']
                 db_session.add(b)
             except:
-                print "a data format exception occured"
+                print "a data format exception occurred"
                 print l
 
     db_session.commit()
+
+
+def initialize_cpq():
+    cs = CPQSchema()
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(base_dir + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_CPQs.csv', 'rU') as cpq_file:
+        reader = csv.DictReader(cpq_file, ['cpq_id', 'account_id', 'created_date', 'product_group', 'x36_mrc_list',
+                                           'x36_nrr_list', 'x36_npv_list', 'building_id'])
+        next(reader)
+        for l in reader:
+            if len(Accounts().query.filter(Accounts.account_id == l['account_id']).all()) == 0:
+                continue
+            del l[None]
+            l['x36_mrc_list'] = Decimal(sub(r'[^\d.]', '', l['x36_mrc_list']))
+            l['x36_nrr_list'] = Decimal(sub(r'[^\d.]', '', l['x36_nrr_list']))
+            l['x36_npv_list'] = Decimal(sub(r'[^\d.]', '', l['x36_npv_list']))
+            try:
+                b = cs.load(l, session=db_session).data
+                b.account_id = l['account_id']
+                b.building_id = l['building_id']
+                db_session.add(b)
+            except:
+                print "a data format exception occurred"
+                print l
+
+    db_session.commit()
+
+
+def initialize_opportunity():
+    ops = OpportunitySchema()
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(base_dir + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Opportunities.csv', 'rU') as opportunity_file:
+        reader = csv.DictReader(opportunity_file, ['opportunity_id', 'account_id', 'stage_name', 'is_closed',
+                                                   'is_won', 'created_date', 'terms_in_month', 'service',
+                                                   'opportunity_type', 'product_group', 'building_id'])
+        next(reader)
+        for l in reader:
+            del l[None]
+            if not l['terms_in_month']:
+                l['terms_in_month'] = 0
+            try:
+                b = ops.load(l, session=db_session).data
+                if len(Accounts().query.filter(Accounts.account_id == l['account_id']).all()) == 0:
+                    continue
+                b.account_id = l['account_id']
+                b.building_id = l['building_id']
+                db_session.add(b)
+            except:
+                print "a data format exception occurred"
+                print l
+
+    db_session.commit()
+
+
+def initialize_services():
+    ss = ServiceSchema()
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    with open(base_dir + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Services.csv', 'rU') as services_file:
+        reader = csv.DictReader(services_file, ['service_id', 'account_id', 'total_mrr', 'netx_mrc',
+                                                'product_group', 'status', 'building_id'])
+        next(reader)
+        for l in reader:
+            if not l['building_id'] or len(Building().query.filter(Building.building_id == l['building_id']).all()) == 0:
+                continue
+            del l[None]
+            l['total_mrr'] = Decimal(sub(r'[^\d.]', '', l['total_mrr']))
+            l['netx_mrc'] = Decimal(sub(r'[^\d.]', '', l['netx_mrc']))
+            try:
+                b = ss.load(l, session=db_session).data
+                b.account_id = l['account_id']
+                b.building_id = l['building_id']
+                db_session.add(b)
+            except:
+                print "a data format exception occurred"
+                print l
+        db_session.commit()
+
+
 
 
 @app.route('/')
