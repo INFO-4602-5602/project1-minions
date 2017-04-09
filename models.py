@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Date, Boolean
 from marshmallow_sqlalchemy import ModelSchema
 
 engine = create_engine('mysql+pymysql://root:root@localhost:3306/zayo', echo=False)
@@ -64,7 +64,56 @@ class Sites(Base):
         return "<Sites: " + self.site_id + ">"
 
 
+class CPQ(Base):
+    __tablename__ = 'CPQ'
+
+    id = Column(Integer, primary_key=True)
+    cpq_id = Column(String(120))
+    account_id = Column(String(120), ForeignKey('Accounts.account_id'))
+    created_date = Column(Date())
+    product_group = Column(String(120))
+    x36_mrc_list = Column(Float)
+    x36_nrr_list = Column(Float)
+    x36_npv_list = Column(Float)
+    building_id = Column(String(120), ForeignKey('Building.building_id'))
+
+    def __repr__(self):
+        return "<CPQ: " + self.cpq_id + ">"
+
+
+class Opportunity(Base):
+    __tablename__ = 'Opportunity'
+
+    id = Column(Integer, primary_key=True)
+    opportunity_id = Column(String(120))
+    account_id = Column(String(120), ForeignKey('Accounts.account_id'))
+    stage_name = Column(String(120))
+    is_closed = Column(Boolean)
+    is_won = Column(Boolean)
+    created_date = Column(Date)
+    terms_in_month = Column(Integer)
+    service = Column(String(120))
+    opportunity_type = Column(String(120))
+    product_group = Column(String(120))
+    building_id = Column(String(120), ForeignKey('Building.building_id'))
+
+    def __repr__(self):
+        return "<Opportunity: " + self.opportunity_id + ">"
+
+
+class Services(Base):
+    __tablename__ = 'Services'
+
+    service_id = Column(String(120), primary_key=True)
+    account_id = Column(String(120), ForeignKey('Accounts.account_id'))
+    total_mrr = Column(Float)
+    netx_mrc = Column(Float)
+    product_group = Column(String(120))
+    status = Column(String(120))
+    building_id = Column(String(120), ForeignKey('Building.building_id'))
+
 # Schema
+
 
 class BuildingSchema(ModelSchema):
     class Meta:
@@ -80,6 +129,20 @@ class SitesSchema(ModelSchema):
     class Meta:
         model = Sites
 
+
+class CPQSchema(ModelSchema):
+    class Meta:
+        model = CPQ
+
+
+class OpportunitySchema(ModelSchema):
+    class Meta:
+        model = Opportunity
+
+
+class ServiceSchema(ModelSchema):
+    class Meta:
+        model = Services
 
 # Create tables.
 Base.metadata.create_all(bind=engine)
