@@ -4,7 +4,6 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean
 from marshmallow_sqlalchemy import ModelSchema
-from marshmallow import fields
 
 engine = create_engine('mysql+pymysql://root:root@localhost:3306/zayo', echo=False)
 db_session = scoped_session(sessionmaker(autocommit=False,
@@ -51,6 +50,9 @@ class Accounts(Base):
     dandb_revenue = Column(Float)
     dandb_total_employees = Column(Integer)
     sites = relationship("Sites", back_populates="account")
+    cpqs = relationship("CPQ", back_populates="account")
+    opportunities = relationship("Opportunity", back_populates="account")
+    services = relationship("Services", back_populates="account")
 
     def __repr__(self):
         return "<Accounts: " + self.account_id + ">"
@@ -81,6 +83,7 @@ class CPQ(Base):
     x36_nrr_list = Column(Float)
     x36_npv_list = Column(Float)
     building_id = Column(String(120), ForeignKey('Building.building_id'))
+    account = relationship("Accounts", back_populates="cpqs")
 
     def __repr__(self):
         return "<CPQ: " + self.cpq_id + ">"
@@ -101,6 +104,7 @@ class Opportunity(Base):
     opportunity_type = Column(String(120))
     product_group = Column(String(120))
     building_id = Column(String(120), ForeignKey('Building.building_id'))
+    account = relationship("Accounts", back_populates="opportunities")
 
     def __repr__(self):
         return "<Opportunity: " + self.opportunity_id + ">"
@@ -116,30 +120,24 @@ class Services(Base):
     product_group = Column(String(120))
     status = Column(String(120))
     building_id = Column(String(120), ForeignKey('Building.building_id'))
+    account = relationship("Accounts", back_populates="services")
 
 # Schema
 
 
 class AccountSchema(ModelSchema):
     class Meta:
-        fields = ('account_id', 'industry', 'vertical', 'total_brr', 'annual_revenue', 'number_of_employees',
-                  'dandb_revenue', 'dandb_total_employees')
+        model = Accounts
 
 
 class SitesSchema(ModelSchema):
     class Meta:
-        fields = ('site_id', 'building_id', 'account_id', 'account')
-
-    account = fields.Nested(AccountSchema)
+        model = Sites
 
 
 class BuildingSchema(ModelSchema):
     class Meta:
-        fields = ('building_id', 'market', 'street_address', 'city', 'state', 'postal_code', 'longitude', 'latitude',
-                  'on_zayo_network_status', 'net_classification', 'type', 'network_proximity', 'estimated_build_cost',
-                  'sites')
-
-    sites = fields.Nested(SitesSchema, many=True)
+        model = Building
 
 
 class CPQSchema(ModelSchema):

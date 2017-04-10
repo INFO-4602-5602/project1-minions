@@ -3,7 +3,8 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template
-from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema
+from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, \
+    OpportunitySchema, ServiceSchema
 import csv
 import os
 from re import sub
@@ -29,7 +30,7 @@ def shutdown_session(exception = None):
 
 @app.route('/testBuilding')
 def testBuilding():
-    result = Building().query.filter(Building.building_id == 'Bldg-115475').all()
+    result = Building().query.filter(Building.building_id == 'Bldg-012582').all()
     bs = BuildingSchema()
     return bs.dumps(result[0]).data
 
