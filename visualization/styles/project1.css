@@ -7,6 +7,13 @@ body {
     font-size: 11px;
 }
 
+.zayo_logo {
+  width: 200;
+  padding-left: 40%;
+  padding-bottom: 20;
+  padding-top: 20;
+}
+
 .vis_wrapper {
   display: grid | inline-grid | subgrid;
   grid-template-columns: 40px 50px auto 50px 40px;
@@ -76,10 +83,8 @@ html, body {
   width: 500;
   height: 500;
   margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 200px;
-  left: 50%;
+  padding-top: 20;
+  position: relative;
 }
 
 
@@ -112,4 +117,29 @@ html, body {
   height: 600;
   width: 100%;
   background-color: "white";
+}
+
+.google_map_buttons {
+  float: right;
+}
+
+#filter_button_1_div {
+  position: absolute;
+  top: 10%;
+  left: 1px;
+}
+
+
+#filter_background_svg {
+  z-index: -1;
+  position: inline;
+}
+
+#vis_1_div {
+  padding: 50 50 50 50;
+/*
+  padding-left: 50;
+  padding-bottom: 50;
+  padding-top: 50;
+*/
 }

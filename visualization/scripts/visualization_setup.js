@@ -7,7 +7,7 @@ var VIS_SVG_BACKGROUND_WIDTH = "100%";
 var visualizations;
 
 var visualization_selections = {};
-var VIS_NUM = 2
+var VIS_NUM = 1;
 var current_visualization;
 var current_selection;
 

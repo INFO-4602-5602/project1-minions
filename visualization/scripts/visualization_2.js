@@ -7,8 +7,11 @@
 
 // GOOGLE MAP OVERLAY! http://bl.ocks.org/donmccurdy/bd239cc355de227b1104503fc9d435d2
 // Google map api circles click: https://developers.google.com/maps/documentation/javascript/examples/circle-simple
+// Animate Google Map API objects: http://stackoverflow.com/questions/23095685/how-to-animate-google-maps-api-circle
 
-var tool_tip_minimized;
+// Z-index: https://developer.mozilla.org/en/docs/Web/CSS/z-index
+
+var tool_tip_minimized, map_filter_minimized;
 var cities_off = false;
 var tree_mode = false;
 var google_map_on = false;
@@ -26,6 +29,11 @@ var tooltip_height = 200;
 
 var width = 1000;
 var height = 600;
+
+var googleMouseOverInterval;
+var currentGoogleMapCity;
+var google_map_zoomed = false;
+
 
 var test_data = {"Colorado" : { "Denver" : [{"id" : "1", "lat" : 39.2392, "lon" : 104.4903, "on_zayo" : "no"},
                                             {"id" : "2", "lat" : 39.7692, "lon" : 104.5903, "on_zayo" : "yes"},
@@ -351,7 +359,7 @@ function initializeVis_2(vis_container_id, scale=1000) {
   var active = d3.select(null);
   
   var zoom = d3.zoom()
-                .scaleExtent([1, 20])
+                .scaleExtent([0.5, 20])
                 .on("zoom", zoomed);
   
 
@@ -371,7 +379,7 @@ function initializeVis_2(vis_container_id, scale=1000) {
                 .range(["rgb(213,222,217)","rgb(69,173,168)","rgb(84,36,55)","rgb(217,91,67)"]);
 
   
-  createGeoToolTip(vis_container_id);
+
   
   // Create SVG element and append map to the SVG
   var svg = d3.select("#vis_"+vis_container_id+"_svg_container")
@@ -519,73 +527,17 @@ function initializeVis_2(vis_container_id, scale=1000) {
 
 
 
-function createGeoToolTip(i) {
-  var toolTopContainer = d3.select(".google_map_filter")
-                          .append("div")
-                            .attr("class", "geoToolTip")
-                            .style("visibility", "hidden")
-                            .style("opacity", 0);
-  
- toolTopContainer.append("div")
-    .attr("id", "geoToolTipButtons_"+i);
-  
- toolTopContainer.append("div")
-    .attr("id", "geoToolTipInformation_"+i);
-  
-  
-  // Add minimize button
-  d3.select("#geoToolTipButtons_"+i).append("input").data([i])
-    .attr("id", "min_max_tooltip_button_"+i)
-    .attr("type", "button")
-    .attr("value", "Hide Filter")
-    .on("click", function(d) {
-      if (tool_tip_minimized) {
-        
-        // Set flag
-        tool_tip_minimized = false;
-        
-        // Reopen filter
-        d3.select("#geoToolTipInformation_"+d).style("visibility", "visible");
-        
-        // change value to -
-        d3.select(this).property("value", "Hide Filter");
-      }
-      else {
-        
-        // Set flag
-        tool_tip_minimized = true;
-        
-        // Minimize filter
-        d3.select("#geoToolTipInformation_"+d).style("visibility", "hidden");
-        
-        // change value to +
-        d3.select(this).property("value", "Show Filter");
-      }
-    });
-  
-  
-  
-  d3.select("#geoToolTipInformation_"+i)
-      .append('svg')
-        .attr("id", "geoToolTipSVG")
-      .append("g")
-        .attr("id", "geoToolTip_window")
-      .append('rect')
-        .attr("width", tooltip_width)
-        .attr("height", tooltip_height)
-        .style("fill","white")
-        .style("stroke","black");
-}
-
-
 
 function closeGoogleMap() {
   d3.selectAll(".google_map_container").transition().duration(1000).style("opacity", 0).remove();  
+  d3.selectAll(".google_map_buttons").transition().duration(1000).style("opacity", 0).remove();  
   google_map_on = false;
 }
 
 
 function createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id) {
+  
+  google_map_zoomed = false;
   
   // Create the Google Map…
   var map = new google.maps.Map(google_map_div.node(), {
@@ -614,24 +566,102 @@ function createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id)
         radius: 1000
       });
       
-      cityCircle.addListener('click', function() {
         
+    
+      // Google Map Circle on click
+      cityCircle.addListener('click', function() {
+        console.log(google_map_zoomed);
+          
           if (tree_mode) {
             createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id);
             MoveBackToMap(vis_container_id);
+            currentGoogleMapCity = undefined;
             return;
           }
+          
+          if (google_map_zoomed) {
+            google_map_zoomed = false;
+            createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id);
+            MoveBackToMap(vis_container_id);
+            currentGoogleMapCity = undefined;
+            return;
+          }
+          
+          google_map_zoomed = true;
+          currentGoogleMapCity = this;
+        
           d3.select("#svg_g").transition().duration(500).style("opacity", 0.1);
           setupBackButton(1);
           tree_mode = true;
-//          initializeVis_1(1, data);
           initializeVis_1(1);
-          map.setZoom(15);
-          this.setRadius(40);
+//          map.setZoom(15);
+          var zoom_level = 15;
           map.setCenter(this.getCenter());
-          cityCircle.setOptions({fillOpacity : 0.5});
-          console.log();
-        });
+          smoothZoom(map, zoom_level, map.getZoom(), zoomIn=true);
+        
+          this.setRadius(40);
+          this.setOptions({fillOpacity : 0.5});
+      });
+      
+      // the smooth zoom function
+      function smoothZoom (map, max, cnt, zoomIn=true) {
+          if (cnt >= max) {
+              return;
+          }
+          else {
+              z = google.maps.event.addListener(map, 'zoom_changed', function(event){
+                  google.maps.event.removeListener(z);
+                  var update = (zoomIn) ? cnt + 1 : cnt - 1 ;
+                  smoothZoom(map, max, update, zoomIn);
+              });
+              setTimeout(function(){map.setZoom(cnt)}, 50); // 80ms is what I found to work well on my system -- it might not work well on all systems
+          }
+      }  
+      
+      // Google Map Circle on mouseover
+      cityCircle.addListener('mouseover', function() {
+        console.log(google_map_zoomed)
+        if (!google_map_zoomed) {
+          return;
+        }
+        
+        var direction = 1;
+        var rMin = 10, rMax = 100;
+        var time_interval = 50;
+        
+        
+        googleMouseOverInterval = setInterval(function() {
+          try {
+            var radius = currentGoogleMapCity.getRadius();
+            if ((radius > rMax) || (radius < rMin)) {
+                direction *= -1;
+            }
+            currentGoogleMapCity.setRadius(radius + direction * 5);
+          }
+          catch(err) {
+            return;
+          }  
+            
+        }, time_interval);
+       
+        
+          
+      });
+      
+      
+      // Google Map Circle on mouseout
+      cityCircle.addListener('mouseout', function() {
+        
+        if (currentGoogleMapCity == undefined) {
+          return;
+        }
+        
+        clearInterval(googleMouseOverInterval);
+        
+        currentGoogleMapCity.setRadius(40);
+      });
+      
+      
     }
   });
   
@@ -653,11 +683,12 @@ function initializeGoogleMap(i, state_lat, state_lon) {
                                 .style("opacity", 0);
 
   // Setup div for buttons
-  var map_button_div = google_map_container.append("div")
-                                .attr("id", "google_map_button_div")
-                                .attr("class", "google_map_button");
-  
-  
+  var map_button_div = d3.select("#vis_1_button_div");
+//  
+//  var map_button_div = google_map_container.append("div")
+//                                .attr("id", "google_map_button_div")
+//                                .attr("class", "google_map_button");
+//  
   
   
   
@@ -667,10 +698,42 @@ function initializeGoogleMap(i, state_lat, state_lon) {
                                             .attr("class", "google_map");
   
   
+  
   // Setup div for filter
   var google_map_filter_div = google_map_container.append("div")
                                             .attr("id", "google_map_filter_"+i)
-                                            .attr("class", "google_map_filter");
+                                            .attr("class", "geoToolTip");
+  
+  
+  // Setup header div for filter
+  var filter_header_div = google_map_filter_div.append("div").attr("id", "filter_header_div");
+  
+  // Add filter buttons
+  filter_header_div.html("Filter");
+  
+  // Setup filter area
+  var filter_area_div = google_map_filter_div.append("div").attr("id", "filter_area_div");
+  
+  filter_area_div.append("svg")
+                    .attr("height", 300)
+                    .attr("width", 500)
+                  .append("g")
+                  .append("rect")
+                    .attr("id", "filter_background_svg")
+                    .attr("height", 300)
+                    .attr("width", 500)
+                    .style("fill", "white")
+                    .style("stroke", "black");
+  
+  
+  // Setup buttons in filter area
+  filter_area_div.append("div")
+                    .attr("id", "filter_button_1_div")
+                  .append("input")
+                    .attr("id", "filter_button_1")
+                    .attr("type", "button")
+                    .attr("value", "test");
+  
   
   
 
@@ -679,9 +742,84 @@ function initializeGoogleMap(i, state_lat, state_lon) {
   
   
   
+  // Add map minimize button
+  map_button_div.append("input").data([i])
+    .attr("id", "min_max_map_button")
+    .attr("class", "google_map_buttons")
+    .attr("type", "button")
+    .attr("value", "Hide Map")
+    .on("click", function(d) {
+      if (google_map_minimized) {
+        // OPEN MAP 
+        
+        // Set flag
+        google_map_minimized = false;
+        
+        // Reopen map
+        d3.selectAll(".geoToolTip, #min_max_filter_button, #google_map_container_"+d).style("display", "block");
+        d3.selectAll("#city_view_button, #min_max_filter_button").style("display", "inline");
+        
+        
+        // change value to Hide mape
+        d3.select(this).property("value", "Hide Map");
+      }
+      else {
+        // CLOSE MAP
+        
+        // Set flag
+        google_map_minimized = true;
+        
+        // Minimize map
+        d3.selectAll(".geoToolTip, #city_view_button, #min_max_filter_button, #google_map_container_"+d).style("display", "none");
+        
+        // change value to +
+        d3.select(this).property("value", "Show Map");
+      }
+    });
+  
+  
+  
+  
+  
+  // Add filter minimize button
+  map_button_div.append("input").data([i])
+    .attr("id", "min_max_filter_button")
+    .attr("class", "google_map_buttons")
+    .attr("type", "button")
+    .attr("value", "Hide Filter")
+    .on("click", function(d) {
+      if (map_filter_minimized) {
+        
+        // Set flag
+        map_filter_minimized = false;
+        
+        // Reopen map
+        d3.select("#google_map_filter_"+d).style("visibility", "visible");
+        
+        // change value to -
+        d3.select(this).property("value", "Hide Filter");
+      }
+      else {
+        
+        // Set flag
+        map_filter_minimized = true;
+        
+        // Minimize map
+        d3.select("#google_map_filter_"+d).style("visibility", "hidden");
+        
+        // change value to +
+        d3.select(this).property("value", "Show Filter");
+      }
+    });
+  
+  
+  
+  
+  
   // Add button goes back to city view
   map_button_div.append("input").data([i])
     .attr("id", "city_view_button")
+    .attr("class", "google_map_buttons")
     .attr("type", "button")
     .attr("value", "City View")
     .on("click", function(d) {
@@ -693,35 +831,8 @@ function initializeGoogleMap(i, state_lat, state_lon) {
   
   
   
-  // Add minimize button
-  map_button_div.append("input").data([i])
-    .attr("id", "min_max_map_button")
-    .attr("type", "button")
-    .attr("value", "Hide Map")
-    .on("click", function(d) {
-      if (google_map_minimized) {
-        
-        // Set flag
-        google_map_minimized = false;
-        
-        // Reopen map
-        d3.select("#google_map_"+d).style("visibility", "visible");
-        
-        // change value to -
-        d3.select(this).property("value", "Hide Map");
-      }
-      else {
-        
-        // Set flag
-        google_map_minimized = true;
-        
-        // Minimize map
-        d3.select("#google_map_"+d).style("visibility", "hidden");
-        
-        // change value to +
-        d3.select(this).property("value", "Show Map");
-      }
-    });
+  
+  
   
   
   // Set transition on map container
