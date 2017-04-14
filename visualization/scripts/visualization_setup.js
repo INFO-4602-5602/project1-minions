@@ -1,7 +1,7 @@
 var VIS_SVG_CONTAINER_HEIGHT = 600;
 var VIS_SVG_CONTAINER_WIDTH = "100%";
 
-var VIS_SVG_BACKGROUND_HEIGHT = 500;
+var VIS_SVG_BACKGROUND_HEIGHT = 600;
 var VIS_SVG_BACKGROUND_WIDTH = "100%";
 
 var visualizations;
@@ -177,12 +177,11 @@ function initializeContainers() {
   }
   
   // Initialize visualizations
-  visualizations = {"Geo" : initializeVis_2,
-                    "Collapsible Tree" : initializeVis_1,
-                    "Vis 3" : initializeVis_3};
+  visualizations = {"Geo" : initializeVis_2, "Vis 2" : undefined, "Vis 3" : undefined};
 }
 
 
 function initialize() {
+  console.log("HERE");
   initializeContainers();
 }

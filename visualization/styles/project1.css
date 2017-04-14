@@ -45,33 +45,49 @@ html, body {
   padding: 0;
 }
 
-.google_map {
-  width: 400;
-  height: 400;
-  margin: 10;
-  padding: 10;
+/*.google_map, ,  {*/
+.google_map_container  {
+/*  border: 1px solid black;*/
+  width: 500;
+  height: 1000;
+  margin: 0;
+  padding: 0;
   position: absolute;
   top: 200px;
-  right: 10px;
-}
-.stations, .stations svg {
-  position: absolute;
+  right: 150px;
 }
 
-.stations svg {
-  width: 60px;
-  height: 20px;
-  padding-right: 100px;
-  font: 10px sans-serif;
+.google_map {
+/*  border: 1px solid black;*/
+  width: 500;
+  height: 400;
 }
 
-.stations circle {
-  fill: brown;
-  stroke: black;
-  stroke-width: 1.5px;
+.google_map_button {
+  float : left;
 }
+
 /* END CODE FOR GOOGLE MAP */
 
+
+
+/* TOOL TIP */
+.geoToolTip {
+  width: 500;
+  height: 500;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 200px;
+  left: 50%;
+}
+
+
+#geoToolTipSVG {
+  width: 500;
+  height: 200;
+}
+/* END TOOL TIP */
 
 
 .node circle {
@@ -89,4 +105,11 @@ html, body {
   fill: none;
   stroke: #ccc;
   stroke-width: 2px;
+}
+
+
+.svg_background {
+  height: 600;
+  width: 100%;
+  background-color: "white";
 }

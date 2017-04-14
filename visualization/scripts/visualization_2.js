@@ -8,10 +8,24 @@
 // GOOGLE MAP OVERLAY! http://bl.ocks.org/donmccurdy/bd239cc355de227b1104503fc9d435d2
 // Google map api circles click: https://developers.google.com/maps/documentation/javascript/examples/circle-simple
 
-
+var tool_tip_minimized;
 var cities_off = false;
 var tree_mode = false;
 var google_map_on = false;
+var google_map_minimized = false;
+
+var city_color_selected = '#00ff00';
+var city_color_hover = "#00FFFF";
+var city_color_unselected = "rgb(217,91,67)";
+
+var selected_state;
+var selected_city = {};
+
+var tooltip_width = 300;
+var tooltip_height = 200;
+
+var width = 1000;
+var height = 600;
 
 var test_data = {"Colorado" : { "Denver" : [{"id" : "1", "lat" : 39.2392, "lon" : 104.4903, "on_zayo" : "no"},
                                             {"id" : "2", "lat" : 39.7692, "lon" : 104.5903, "on_zayo" : "yes"},
@@ -38,20 +52,6 @@ var test_data = {"Colorado" : { "Denver" : [{"id" : "1", "lat" : 39.2392, "lon" 
 
 
 
-var building_map_test = {
-      "Bldg-124564": {
-        center: {lat: 39.803579, lng: -104.969196},
-        on_zayo: 1
-      },
-      "Bldg-124569": {
-        center: {lat: 39.684491, lng: -104.983563},
-        on_zayo: 1
-      },
-      "Bldg-124566": {
-        center: {lat: 39.738915, lng: -104.914836},
-        on_zayo: 0
-      }
-    };
 
 
 var cities_lat_lon = { "Colorado" : {"lat" : 39.5501, "lon" : -105.7821},
@@ -59,8 +59,7 @@ var cities_lat_lon = { "Colorado" : {"lat" : 39.5501, "lon" : -105.7821},
                        "Georgia" : {"lat" : 32.1656, "lon" : -82.9001},
                      }
 
-var width = 1000;
-var height = 500;
+
 
 
 function transitionCityMarks() {
@@ -129,98 +128,140 @@ function setupBackButton(vis_container_id) {
 }
 
               
+function removeFilterInfo(i=1) {
+  // Hide filter
+  d3.select(".geoToolTip").transition().duration(750).style("opacity", 0).style("visibility", "hidden");
+  
+}
+
+function addFilterInfo(i=1) {
+  // Reopen filter
+  d3.select(".geoToolTip").transition().duration(750).style("opacity", 1).style("visibility", "visible");
+}
 
 
-function mapCity(d, g, projection, vis_container_id) {
-  // Remove city
-  removeCityTransition(".city_marks");
-  
-  
-  for (var state in test_data) {
+function cityClick(d, object_this) {
+  if (google_map_on) {
+    // Close map
+    closeGoogleMap();
+
+    var current_city = Object.keys(selected_city)[0];
+    selected_city[current_city].style.fill = city_color_unselected;
+    selected_city[current_city].style.stroke = null;
+
+    selected_city = {};
     
-    var y = d.id.split("_");
-    var current_state = y[y.length-1];
+    var object_this_city = object_this.id.split("_")
+    object_this_city = object_this_city[object_this_city.length-1];
     
-    if (state == current_state) {
-      for (var city in test_data[state]) {
-        mapItemToCity(state, city, test_data[state][city], g, projection, vis_container_id);
-      }
+    if (current_city != object_this_city) {
+      cityClick(d, object_this);  
     }
+    
+    // Turn off text
+    d3.select("#city_text_"+current_city).transition().duration(750).style("opacity", 0).style("display", "hidden");
+    
+    // Remove filter information
+    removeFilterInfo();
+    
+  }
+  else {
+    // Open map
+    initializeGoogleMap(1, d.lat, d.lon);
+
+    // Set city to selected color
+    object_this.style.stroke = "black";
+    object_this.style.fill = city_color_selected;
+
+    // Set current city
+    selected_city[d.city] = object_this;
+
+    // Turn on text
+    d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");
+    
+    // Add filter information
+    addFilterInfo();
   }
 }
 
 
-function mapItemToCity(state, city, items, g, projection, vis_container_id) {
+function cityMouseOver(d) {
+  if (cities_off) {
+    return;
+  }
+
+  city_mark = d3.select("#city_"+d.city);
+  city_mark.transition()        
+     .duration(750)       
+     .attr("r", city_mark.attr("r")*2)       
+     .style("stroke", "black")
+     .style("fill", function() {
+        var fill_color;
+        if (selected_city == undefined) {
+          fill_color = city_color_hover;
+        }
+        else if (Object.keys(selected_city)[0] == d.city) {
+          fill_color = city_color_selected;
+        }
+        else {
+          fill_color = city_color_hover;
+        }
+        return fill_color;
+      })          
+     .style("opacity", 0.6);  
   
-  var state_city_id = state + "_" + city;
-  console.log("id: " + state_city_id)
-  
-  
-  var longitude, latitude, item_mark;
-
-  g.append("g").attr("class", "city_item_marks")
-    .selectAll("circle."+state_city_id+"_item_marks")
-      .data(items)
-      .enter()
-      .append("circle")
-      .attr("id", function(d) {
-        return state_city_id + "_item_"+d.id;  
-      })
-      .attr("class", state_city_id+"_item_marks")
-      .attr("cx", function(d) {
-          longitude = (d.lon >= 0) ? -d.lon : d.lon;
-          latitude = d.lat;
-          return projection([longitude, latitude])[0];
-      })
-      .attr("cy", function(d) {
-          longitude = (d.lon >= 0) ? -d.lon : d.lon;
-          latitude = d.lat;
-          return projection([longitude, latitude])[1];
-      })
-      .attr("r", function(d) {
-//          return Math.sqrt(d.population) / 100;
-        return 2;
-      })
-      .style("fill", function(d) {
-        var building_on = (d.on_zayo == "yes") ? true : false;
-        var item_color = (building_on) ? "green" : "red";
-        return item_color;
-      })	
-      .style("opacity", 0)		
-
-      .on("click", function(d) {
-        d3.select("#svg_g").transition().duration(500).style("opacity", 0.1);
-        setupBackButton(vis_container_id);
-        tree_mode = true;
-        initializeVis_1(1);
-      })
-
-
-      .on("mouseover", function(d) {      
-          item_mark = d3.select("#" + state_city_id + "_item_"+d.id);
-          item_mark.transition()        
-             .duration(200)       
-             .attr("r", item_mark.attr("r")*1.5)       
-             .style("opacity", .9);      
-      })   
-
-      // fade out tooltip on mouse out               
-      .on("mouseout", function(d) {       
-          item_mark = d3.select("#" + state_city_id + "_item_"+d.id);
-          item_mark.transition()         
-             .duration(500)      
-             .attr("r", function (d) {
-//                var original_r = Math.sqrt(d.population) / 100;
-                var original_r = 2;
-                return original_r;
-              })
-             .style("opacity", 0.85);   
-      });
-
-      d3.selectAll("." + state_city_id + "_item_marks").transition().duration(500).style("opacity", 0.85);
+  // Turn on text
+  if (Object.keys(selected_city).length == 0) {
+    d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");  
+  }
 }
-      
 
+
+function cityMouseOut(d) {
+  if (cities_off) { 
+    return;
+  }
+  
+  city_mark = d3.select("#city_"+d.city);
+  city_mark.transition()         
+     .duration(500)      
+     .attr("r", function () {
+        var original_r = Math.sqrt(d.population) / 100;
+        return original_r;
+      })
+     .style("fill", function() {
+        var fill_color;
+        if (selected_city == undefined) {
+          fill_color = city_color_unselected;
+        }
+        else if (Object.keys(selected_city)[0] == d.city) {
+          fill_color = city_color_selected;
+        }
+        else {
+          fill_color = city_color_unselected;
+        }
+        return fill_color;
+      })  
+     .style("stroke", function() {
+        var city_stroke;
+        if (selected_city == undefined) {
+          city_stroke = "none";
+        }
+        else if (Object.keys(selected_city)[0] == d.city) {
+          city_stroke = "black";
+        }
+        else {
+          city_stroke = "none";
+        }
+        return city_stroke;
+      })        
+     .style("opacity", 0.85);  
+  
+  // Turn off text
+  if (Object.keys(selected_city).length == 0) {
+    d3.select("#city_text_"+d.city).transition().duration(1000).style("opacity", 0.0).style("display", "none");
+  }
+}
 
 
 function mapCityToState(g, projection) {
@@ -228,69 +269,76 @@ function mapCityToState(g, projection) {
   // Remove items
   removeCityItemTransition();
   
+  
+  
+  // Add cities (circles)
   d3.csv("data/cities.csv", function(cities_data) {
       var longitude, latitude, city_mark;
+//      var city_group = g.append("g")   
 
-      g.selectAll("circle")
-          .data(cities_data)
-          .enter()
-          .append("circle")
-          .attr("id", function(d) {
-            return "city_"+d.city;  
-          })
-          .attr("class", "city_marks")
-          .attr("cx", function(d) {
-              longitude = (d.lon >= 0) ? -d.lon : d.lon;
-              latitude = d.lat;
-              return projection([longitude, latitude])[0];
-          })
-          .attr("cy", function(d) {
-              longitude = (d.lon >= 0) ? -d.lon : d.lon;
-              latitude = d.lat;
-              return projection([longitude, latitude])[1];
-          })
-          .attr("r", function(d) {
-              return Math.sqrt(d.population) / 100;
-          })
-          .style("fill", "rgb(217,91,67)")	
-          .style("opacity", 0)		
+      // Add groups
+      var city_group = g.selectAll("g")
+                  .data(cities_data).enter()
+                  .append("g")
+                    .attr("id", function(d) { return "city_group_"+d.city; });
+      
+      // Add cities
+      city_group.append("circle")
+                      .attr("id", function(d) {
+                        return "city_"+d.city;  
+                      })
+                      .attr("class", "city_marks")
+                      .attr("cx", function(d) {
+                          longitude = (d.lon >= 0) ? -d.lon : d.lon;
+                          latitude = d.lat;
+                          return projection([longitude, latitude])[0];
+                      })
+                      .attr("cy", function(d) {
+                          longitude = (d.lon >= 0) ? -d.lon : d.lon;
+                          latitude = d.lat;
+                          return projection([longitude, latitude])[1];
+                      })
+                      .attr("r", function(d) {
+                          return Math.sqrt(d.population) / 100;
+                      })
+                      .style("fill", city_color_unselected)	
+                      .style("opacity", 0)
+                      .on("click", function(d) {
+                        cityClick(d, this);
+                      })
+                      .on("mouseover", function(d) {
+                          cityMouseOver(d);
+                      })   
+                      // fade out tooltip on mouse out               
+                      .on("mouseout", function(d) {   
+                          cityMouseOut(d);
+                      });		
+      
+      // Add city text
+      city_group.append("text")
+                      .attr("id", function(d) {
+                        return "city_text_"+d.city;  
+                      })
+                      .attr("class", "city_marks_text")
+                      .attr("x", function(d) {
+                          longitude = (d.lon >= 0) ? -d.lon : d.lon;
+                          latitude = d.lat;
+                          return projection([longitude, latitude])[0];
+                      })
+                      .attr("y", function(d) {
+                          longitude = (d.lon >= 0) ? -d.lon : d.lon;
+                          latitude = d.lat;
+                          return projection([longitude, latitude])[1];
+                      })
+                      .text(function(d) {
+                          return d.city;
+                      })
+                      .style("fill", "black")	
+                      .style("opacity", 0)	
+                      .style("display", "none")		
+                      .style("font-size", "20px")
+                      .attr("transform", "translate(0, -20)");
 
-          .on("click", function(d) {
-        
-            if (google_map_on) {
-              // Close map
-              closeGoogleMap();
-            }
-            else {
-              initializeGoogleMap(1, d.lat, d.lon);
-            }
-          })
-
-
-          .on("mouseover", function(d) {  
-              if (!cities_off) {
-                city_mark = d3.select("#city_"+d.city);
-                city_mark.transition()        
-                   .duration(200)       
-                   .attr("r", city_mark.attr("r")*1.5)       
-                   .style("opacity", .9);  
-              }
-          })   
-
-          // fade out tooltip on mouse out               
-          .on("mouseout", function(d) {   
-              if (!cities_off) {
-                city_mark = d3.select("#city_"+d.city);
-                city_mark.transition()         
-                   .duration(500)      
-                   .attr("r", function (d) {
-                      var original_r = Math.sqrt(d.population) / 100;
-                      return original_r;
-                    })
-                   .style("opacity", 0.85);  
-              }
-          });
-    
     d3.selectAll(".city_marks").transition().duration(500).style("opacity", 0.85);
   }); 
 }
@@ -322,21 +370,15 @@ function initializeVis_2(vis_container_id, scale=1000) {
   var color = d3.scaleLinear()
                 .range(["rgb(213,222,217)","rgb(69,173,168)","rgb(84,36,55)","rgb(217,91,67)"]);
 
-  var legendText = ["Cities Lived", "States Lived", "States Visited", "Nada"];
   
+  createGeoToolTip(vis_container_id);
   
-  //Create SVG element and append map to the SVG
+  // Create SVG element and append map to the SVG
   var svg = d3.select("#vis_"+vis_container_id+"_svg_container")
-                .attr("width", width)
                 .attr("height", height)
                 .style("fill", "white")
                 .on("click", stopped, true);
-  
-  svg.append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .on("click", reset);
-  
+
   svg.call(zoom);
                 
                 
@@ -344,6 +386,7 @@ function initializeVis_2(vis_container_id, scale=1000) {
   
   
   function clicked(d) {
+    
     if (tree_mode) {
       return;
     }
@@ -352,11 +395,6 @@ function initializeVis_2(vis_container_id, scale=1000) {
       mapCityToState(g, projection);
       cities_off = false;
       return reset();
-    }
-    else {
-      // ZOOM IN
-//      mapCity(this, g, projection, vis_container_id);
-//      cities_off = true;
     }
     
     active.classed("active", false);
@@ -373,6 +411,8 @@ function initializeVis_2(vis_container_id, scale=1000) {
     svg.transition()
         .duration(750)
         .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
+    
+    
   }
 
   function reset() {
@@ -385,9 +425,6 @@ function initializeVis_2(vis_container_id, scale=1000) {
   }
 
   function zoomed() {
-//    if (tree_mode) {
-//      return;
-//    }
     
     g.style("stroke-width", 1.5 / d3.event.transform.k + "px");
     g.attr("transform", d3.event.transform); // updated for d3 v4
@@ -446,7 +483,7 @@ function initializeVis_2(vis_container_id, scale=1000) {
           .on("mouseover", function(d) {      
               d3.select(this).transition()        
                  .duration(200)       
-                 .style("opacity", .9);      
+                 .style("opacity", .8);      
           })   
 
           // fade out tooltip on mouse out               
@@ -471,7 +508,6 @@ function initializeVis_2(vis_container_id, scale=1000) {
             }
           });
       
-      
 
       // Map the cities
       mapCityToState(g, projection);
@@ -483,44 +519,94 @@ function initializeVis_2(vis_container_id, scale=1000) {
 
 
 
+function createGeoToolTip(i) {
+  var toolTopContainer = d3.select(".google_map_filter")
+                          .append("div")
+                            .attr("class", "geoToolTip")
+                            .style("visibility", "hidden")
+                            .style("opacity", 0);
+  
+ toolTopContainer.append("div")
+    .attr("id", "geoToolTipButtons_"+i);
+  
+ toolTopContainer.append("div")
+    .attr("id", "geoToolTipInformation_"+i);
+  
+  
+  // Add minimize button
+  d3.select("#geoToolTipButtons_"+i).append("input").data([i])
+    .attr("id", "min_max_tooltip_button_"+i)
+    .attr("type", "button")
+    .attr("value", "Hide Filter")
+    .on("click", function(d) {
+      if (tool_tip_minimized) {
+        
+        // Set flag
+        tool_tip_minimized = false;
+        
+        // Reopen filter
+        d3.select("#geoToolTipInformation_"+d).style("visibility", "visible");
+        
+        // change value to -
+        d3.select(this).property("value", "Hide Filter");
+      }
+      else {
+        
+        // Set flag
+        tool_tip_minimized = true;
+        
+        // Minimize filter
+        d3.select("#geoToolTipInformation_"+d).style("visibility", "hidden");
+        
+        // change value to +
+        d3.select(this).property("value", "Show Filter");
+      }
+    });
+  
+  
+  
+  d3.select("#geoToolTipInformation_"+i)
+      .append('svg')
+        .attr("id", "geoToolTipSVG")
+      .append("g")
+        .attr("id", "geoToolTip_window")
+      .append('rect')
+        .attr("width", tooltip_width)
+        .attr("height", tooltip_height)
+        .style("fill","white")
+        .style("stroke","black");
+}
+
 
 
 function closeGoogleMap() {
-  d3.select(".google_map").transition().duration(1000).style("opacity", 0).remove();  
+  d3.selectAll(".google_map_container").transition().duration(1000).style("opacity", 0).remove();  
   google_map_on = false;
 }
 
-function initializeGoogleMap(i, state_lat, state_lon) {
-  
-  closeGoogleMap();
-  
-  google_map_on = true;
-  
-  var map_container = d3.select("#vis_"+i+"_svg_div").append("div").attr("id", "google_map_"+i).attr("class", "google_map");
-  
-  // Set to be hidden for later transition
-  map_container.style("opacity", 0);
+
+function createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id) {
   
   // Create the Google Map…
-  var map = new google.maps.Map(d3.select("#google_map_"+i).node(), {
+  var map = new google.maps.Map(google_map_div.node(), {
     zoom: 9,
     center: new google.maps.LatLng(state_lat, -1*state_lon),
     mapTypeId: google.maps.MapTypeId.TERRAIN
   });
-
-  // Load the station data. When the data comes back, create an overlay.
+  
   d3.json("data/building.json", function(error, data) {
     if (error) throw error;
-    
+   
     for (var building in data) {
+      
+      var cityCircleColor = (data[building].on_zayo == "Yes") ? "#00FF00" : "#FF0000";
       var myLatlng = data[building].center;
-      console.log("Building: " + building);
       // Add the circle for this city to the map.
       var cityCircle = new google.maps.Circle({
-        strokeColor: '#FF0000',
+        strokeColor: cityCircleColor,
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillColor: '#FF0000',
+        fillColor: cityCircleColor,
         fillOpacity: 0.35,
         map: map,
         title: "Click to Zoom",
@@ -529,15 +615,115 @@ function initializeGoogleMap(i, state_lat, state_lon) {
       });
       
       cityCircle.addListener('click', function() {
-        console.log("HERE");
+        
+          if (tree_mode) {
+            createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id);
+            MoveBackToMap(vis_container_id);
+            return;
+          }
           d3.select("#svg_g").transition().duration(500).style("opacity", 0.1);
           setupBackButton(1);
           tree_mode = true;
+//          initializeVis_1(1, data);
           initializeVis_1(1);
-          map.setZoom(13);
-          map.setCenter(cityCircle.getCenter());
+          map.setZoom(15);
+          this.setRadius(40);
+          map.setCenter(this.getCenter());
+          cityCircle.setOptions({fillOpacity : 0.5});
+          console.log();
         });
     }
   });
-  map_container.transition().delay(200).duration(1000).style("opacity", 1);
+  
+  return map;
+}
+
+function initializeGoogleMap(i, state_lat, state_lon) {
+  
+  // Flag map as turned on
+  google_map_on = true;
+  
+  google_map_minimized = false;
+  
+  // Setup google div
+  var google_map_container = d3.select("#vis_"+i+"_svg_div")
+                                .append("div")
+                                .attr("id", "google_map_container_"+i)
+                                .attr("class", "google_map_container")
+                                .style("opacity", 0);
+
+  // Setup div for buttons
+  var map_button_div = google_map_container.append("div")
+                                .attr("id", "google_map_button_div")
+                                .attr("class", "google_map_button");
+  
+  
+  
+  
+  
+  // Setup div for google map
+  var google_map_div = google_map_container.append("div")
+                                            .attr("id", "google_map_"+i)
+                                            .attr("class", "google_map");
+  
+  
+  // Setup div for filter
+  var google_map_filter_div = google_map_container.append("div")
+                                            .attr("id", "google_map_filter_"+i)
+                                            .attr("class", "google_map_filter");
+  
+  
+
+  // Load the station data. When the data comes back, create an overlay.
+  createGoogleMap(google_map_div, state_lat, state_lon, i);
+  
+  
+  
+  // Add button goes back to city view
+  map_button_div.append("input").data([i])
+    .attr("id", "city_view_button")
+    .attr("type", "button")
+    .attr("value", "City View")
+    .on("click", function(d) {
+      if (tree_mode) {
+        return;
+      }
+      createGoogleMap(google_map_div, state_lat, state_lon, i);
+    });
+  
+  
+  
+  // Add minimize button
+  map_button_div.append("input").data([i])
+    .attr("id", "min_max_map_button")
+    .attr("type", "button")
+    .attr("value", "Hide Map")
+    .on("click", function(d) {
+      if (google_map_minimized) {
+        
+        // Set flag
+        google_map_minimized = false;
+        
+        // Reopen map
+        d3.select("#google_map_"+d).style("visibility", "visible");
+        
+        // change value to -
+        d3.select(this).property("value", "Hide Map");
+      }
+      else {
+        
+        // Set flag
+        google_map_minimized = true;
+        
+        // Minimize map
+        d3.select("#google_map_"+d).style("visibility", "hidden");
+        
+        // change value to +
+        d3.select(this).property("value", "Show Map");
+      }
+    });
+  
+  
+  // Set transition on map container
+  google_map_container.transition().delay(200).duration(1000).style("opacity", 1);
 }
