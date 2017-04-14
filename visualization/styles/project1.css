@@ -1,0 +1,92 @@
+h1 {
+  font-size: 80px;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+.vis_wrapper {
+  display: grid | inline-grid | subgrid;
+  grid-template-columns: 40px 50px auto 50px 40px;
+  grid-template-rows: 25% 100px auto;
+}
+
+.background {
+  fill: none;
+  background-color: whitesmoke;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #ccc;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+.mesh {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+
+
+/* CODE FOR GOOGLE MAP */
+html, body {
+  width: "100%";
+  height: "100%";
+  margin: 0;
+  padding: 0;
+}
+
+.google_map {
+  width: 400;
+  height: 400;
+  margin: 10;
+  padding: 10;
+  position: absolute;
+  top: 200px;
+  right: 10px;
+}
+.stations, .stations svg {
+  position: absolute;
+}
+
+.stations svg {
+  width: 60px;
+  height: 20px;
+  padding-right: 100px;
+  font: 10px sans-serif;
+}
+
+.stations circle {
+  fill: brown;
+  stroke: black;
+  stroke-width: 1.5px;
+}
+/* END CODE FOR GOOGLE MAP */
+
+
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.node text {
+  font: 12px sans-serif;
+  color: black;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
