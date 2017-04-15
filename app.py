@@ -2,8 +2,8 @@
 # Imports
 # ----------------------------------------------------------------------------#
 
-from flask import Flask, render_template
-from models import db_session, Building, Accounts, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, \
+from flask import Flask, render_template, jsonify
+from models import db_session, Building, Accounts, BuildingSchema2, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, \
     OpportunitySchema, ServiceSchema
 import csv
 import os
@@ -20,24 +20,74 @@ app.config.from_object('config')
 
 # Automatically tear down SQLAlchemy.
 @app.teardown_request
-def shutdown_session(exception = None):
+def shutdown_session(exception=None):
     db_session.remove()
+
 
 # ----------------------------------------------------------------------------#
 # Controllers.
 # ----------------------------------------------------------------------------#
 
 
-@app.route('/testBuilding')
-def testBuilding():
-    result = Building().query.filter(Building.building_id == 'Bldg-012582').all()
-    bs = BuildingSchema()
-    response = app.response_class(
-        response=bs.dumps(result[0]).data,
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+def calculate_cpq_profit(r_list):
+    d_profit = 0
+    for r in r_list:
+        d_profit += reduce((lambda x, y: x + y.x36_npv_list), r.cpqs, 0)
+    return d_profit
+
+
+@app.route('/building_profits/<market>')
+def building_profits(market):
+    result = Building().query.filter(Building.market == market) \
+        .filter(Building.on_zayo_network_status == "Not on Zayo Network") \
+        .all()
+    bs = BuildingSchema2()
+    building_profits_json = []
+    for r in result:
+        try:
+            cpqs_building = r.cpqs
+            b_json = bs.dump(r).data
+            b_json[u'profit'] = 0
+            for c in cpqs_building:
+                if r.building_id in b_json:
+                    b_json['profit'] += c.x36_npv_list
+                else:
+                    b_json['profit'] = c.x36_npv_list
+            building_profits_json.append(b_json)
+        except :
+            print "Unexpected Exception occurred while building profits json"
+
+    return jsonify(result=building_profits_json)
+
+
+@app.route('/account_profits/<market>')
+def account_profits(market):
+    result = Building().query.filter(Building.market == market) \
+        .filter(Building.on_zayo_network_status == "Not on Zayo Network")\
+        .all()
+    accounts_profits_json = {}
+
+    for r in result:
+        cpqs_building = r.cpqs
+        for c in cpqs_building:
+            if c.account_id in accounts_profits_json:
+                accounts_profits_json[c.account_id] += c.x36_npv_list
+            else:
+                accounts_profits_json[c.account_id] = c.x36_npv_list
+
+    return jsonify(accounts_profits_json)
+
+
+@app.route('/market_profits')
+def market_profits():
+    markets = ['Denver', 'Atlanta', 'Dallas']
+    profits_json = {}
+    for m in markets:
+        result = Building().query.filter(Building.market == m) \
+            .filter(Building.on_zayo_network_status == "Not on Zayo Network").all()
+        profits_json[m] = calculate_cpq_profit(result)
+
+    return jsonify(profits_json)
 
 
 @app.route('/initialize')
@@ -152,7 +202,8 @@ def initialize_cpq():
 def initialize_opportunity():
     ops = OpportunitySchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Opportunities.csv', 'rU') as opportunity_file:
+    with open(base_dir + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Opportunities.csv',
+              'rU') as opportunity_file:
         reader = csv.DictReader(opportunity_file, ['opportunity_id', 'account_id', 'stage_name', 'is_closed',
                                                    'is_won', 'created_date', 'terms_in_month', 'service',
                                                    'opportunity_type', 'product_group', 'building_id'])
@@ -183,7 +234,8 @@ def initialize_services():
                                                 'product_group', 'status', 'building_id'])
         next(reader)
         for l in reader:
-            if not l['building_id'] or len(Building().query.filter(Building.building_id == l['building_id']).all()) == 0:
+            if not l['building_id'] or len(
+                    Building().query.filter(Building.building_id == l['building_id']).all()) == 0:
                 continue
             del l[None]
             l['total_mrr'] = Decimal(sub(r'[^\d.]', '', l['total_mrr']))
@@ -221,6 +273,8 @@ def internal_error(error):
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
+
+
 """
 if not app.debug:
     file_handler = FileHandler('error.log')

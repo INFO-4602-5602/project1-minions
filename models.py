@@ -34,6 +34,7 @@ class Building(Base):
     network_proximity = Column(Float)
     estimated_build_cost = Column(Float)
     sites = relationship("Sites", back_populates="building")
+    cpqs = relationship("CPQ", back_populates="building")
 
     def __repr__(self):
         return "<Building: " + self.building_id + ">"
@@ -51,7 +52,6 @@ class Accounts(Base):
     dandb_revenue = Column(Float)
     dandb_total_employees = Column(Integer)
     sites = relationship("Sites", back_populates="account")
-    cpqs = relationship("CPQ", back_populates="account")
     opportunities = relationship("Opportunity", back_populates="account")
     services = relationship("Services", back_populates="account")
 
@@ -84,7 +84,7 @@ class CPQ(Base):
     x36_nrr_list = Column(Float)
     x36_npv_list = Column(Float)
     building_id = Column(String(120), ForeignKey('Building.building_id'))
-    account = relationship("Accounts", back_populates="cpqs")
+    building = relationship("Building", back_populates="cpqs")
 
     def __repr__(self):
         return "<CPQ: " + self.cpq_id + ">"
@@ -130,7 +130,6 @@ class AccountSchema(ModelSchema):
     class Meta:
         model = Accounts
     sites = fields.Nested("SitesSchema", many=True, exclude=('account', 'building'))
-    cpqs = fields.Nested("CPQSchema", many=True, exclude=('account',))
     opportunities = fields.Nested("OpportunitySchema", many=True, exclude=('account',))
     services = fields.Nested("ServiceSchema", many=True, exclude=('account',))
 
@@ -145,7 +144,13 @@ class SitesSchema(ModelSchema):
 class BuildingSchema(ModelSchema):
     class Meta:
         model = Building
+    cpqs = fields.Nested("CPQSchema", many=True, exclude=('building',))
     sites = fields.Nested(SitesSchema, many=True, exclude=('building',))
+
+
+class BuildingSchema2(ModelSchema):
+    class Meta:
+        model = Building
 
 
 class CPQSchema(ModelSchema):
