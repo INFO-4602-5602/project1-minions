@@ -14,6 +14,15 @@ body {
   padding-top: 20;
 }
 
+.cu_logo {
+  width: 200;
+  padding-left: 40%;
+  padding-bottom: 20;
+  padding-top: 20;
+}
+
+
+
 .vis_wrapper {
   display: grid | inline-grid | subgrid;
   grid-template-columns: 40px 50px auto 50px 40px;
@@ -44,57 +53,6 @@ body {
 
 
 
-/* CODE FOR GOOGLE MAP */
-html, body {
-  width: "100%";
-  height: "100%";
-  margin: 0;
-  padding: 0;
-}
-
-/*.google_map, ,  {*/
-.google_map_container  {
-/*  border: 1px solid black;*/
-  width: 500;
-  height: 1000;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 200px;
-  right: 150px;
-}
-
-.google_map {
-/*  border: 1px solid black;*/
-  width: 500;
-  height: 400;
-}
-
-.google_map_button {
-  float : left;
-}
-
-/* END CODE FOR GOOGLE MAP */
-
-
-
-/* TOOL TIP */
-.geoToolTip {
-  width: 500;
-  height: 500;
-  margin: 0;
-  padding-top: 20;
-  position: relative;
-}
-
-
-#geoToolTipSVG {
-  width: 500;
-  height: 200;
-}
-/* END TOOL TIP */
-
-
 .node circle {
   fill: #fff;
   stroke: steelblue;
@@ -119,21 +77,6 @@ html, body {
   background-color: "white";
 }
 
-.google_map_buttons {
-  float: right;
-}
-
-#filter_button_1_div {
-  position: absolute;
-  top: 10%;
-  left: 1px;
-}
-
-
-#filter_background_svg {
-  z-index: -1;
-  position: inline;
-}
 
 #vis_1_div {
   padding: 50 50 50 50;
