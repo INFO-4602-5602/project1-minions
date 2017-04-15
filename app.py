@@ -32,7 +32,12 @@ def shutdown_session(exception = None):
 def testBuilding():
     result = Building().query.filter(Building.building_id == 'Bldg-012582').all()
     bs = BuildingSchema()
-    return bs.dumps(result[0]).data
+    response = app.response_class(
+        response=bs.dumps(result[0]).data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @app.route('/initialize')
@@ -59,7 +64,7 @@ def initialize_buildings():
         for l in reader:
             l["estimated_build_cost"] = Decimal(sub(r'[^\d.]', '', l["estimated_build_cost"]))
             try:
-                b = bs.load(l, session=db_session).data
+                b = bs.load(l, session=db_session, partial=True).data
                 db_session.add(b)
             except:
                 print "a data format exception occurred"
@@ -71,7 +76,7 @@ def initialize_buildings():
                     l["latitude"] = 0
                 if not l["longitude"]:
                     l["longitude"] = 0
-                b = bs.load(l, session=db_session).data
+                b = bs.load(l, session=db_session, partial=True).data
                 db_session.add(b)
 
     db_session.commit()
@@ -89,7 +94,7 @@ def initialize_accounts():
             l["annual_revenue"] = Decimal(sub(r'[^\d.]', '', l["annual_revenue"]))
             l["dandb_revenue"] = Decimal(sub(r'[^\d.]', '', l["dandb_revenue"]))
             try:
-                b = acs.load(l, session=db_session).data
+                b = acs.load(l, session=db_session, partial=True).data
                 db_session.add(b)
             except:
                 print "a data format exception occurred"
@@ -107,7 +112,7 @@ def initialize_sites():
         for l in reader:
             del l[None]
             try:
-                b = ss.load(l, session=db_session).data
+                b = ss.load(l, session=db_session, partial=True).data
                 b.account_id = l['account_id']
                 b.building_id = l['building_id']
                 db_session.add(b)
@@ -133,7 +138,7 @@ def initialize_cpq():
             l['x36_nrr_list'] = Decimal(sub(r'[^\d.]', '', l['x36_nrr_list']))
             l['x36_npv_list'] = Decimal(sub(r'[^\d.]', '', l['x36_npv_list']))
             try:
-                b = cs.load(l, session=db_session).data
+                b = cs.load(l, session=db_session, partial=True).data
                 b.account_id = l['account_id']
                 b.building_id = l['building_id']
                 db_session.add(b)
@@ -157,7 +162,7 @@ def initialize_opportunity():
             if not l['terms_in_month']:
                 l['terms_in_month'] = 0
             try:
-                b = ops.load(l, session=db_session).data
+                b = ops.load(l, session=db_session, partial=True).data
                 if len(Accounts().query.filter(Accounts.account_id == l['account_id']).all()) == 0:
                     continue
                 b.account_id = l['account_id']

@@ -4,6 +4,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean
 from marshmallow_sqlalchemy import ModelSchema
+from marshmallow import fields
 
 engine = create_engine('mysql+pymysql://root:root@localhost:3306/zayo', echo=False)
 db_session = scoped_session(sessionmaker(autocommit=False,
@@ -128,16 +129,23 @@ class Services(Base):
 class AccountSchema(ModelSchema):
     class Meta:
         model = Accounts
+    sites = fields.Nested("SitesSchema", many=True, exclude=('account', 'building'))
+    cpqs = fields.Nested("CPQSchema", many=True, exclude=('account',))
+    opportunities = fields.Nested("OpportunitySchema", many=True, exclude=('account',))
+    services = fields.Nested("ServiceSchema", many=True, exclude=('account',))
 
 
 class SitesSchema(ModelSchema):
     class Meta:
         model = Sites
+    account = fields.Nested(AccountSchema)
+    building = fields.Nested("BuildingSchema")
 
 
 class BuildingSchema(ModelSchema):
     class Meta:
         model = Building
+    sites = fields.Nested(SitesSchema, many=True, exclude=('building',))
 
 
 class CPQSchema(ModelSchema):

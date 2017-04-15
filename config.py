@@ -6,7 +6,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Enable debug mode.
 
-DEBUG = False
+DEBUG = True
 
 # Secret key for session management. You can generate random strings here:
 
