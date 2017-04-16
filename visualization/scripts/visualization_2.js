@@ -13,6 +13,9 @@
 
 // time chained transitions: https://bl.ocks.org/mbostock/3903818
 
+// loading spinners
+//   http://stackoverflow.com/questions/15485127/d3-js-adding-a-loading-notification-during-ajax-request
+
 var tool_tip_minimized, map_filter_minimized;
 var cities_off = false;
 var tree_mode = false;
@@ -33,37 +36,8 @@ var height = 600;
 
 
 
-var test_data = {"Colorado" : { "Denver" : [{"id" : "1", "lat" : 39.2392, "lon" : 104.4903, "on_zayo" : "no"},
-                                            {"id" : "2", "lat" : 39.7692, "lon" : 104.5903, "on_zayo" : "yes"},
-                                            {"id" : "3", "lat" : 39.5392, "lon" : 104.3703, "on_zayo" : "yes"},
-                                            {"id" : "4", "lat" : 39.7392, "lon" : 104.2903, "on_zayo" : "yes"},
-                                            {"id" : "2", "lat" : 39.7632, "lon" : 104.3903, "on_zayo" : "no"},
-                                            {"id" : "3", "lat" : 39.5232, "lon" : 104.372203, "on_zayo" : "yes"},
-                                            {"id" : "4", "lat" : 39.532, "lon" : 104.233, "on_zayo" : "yes"}
-                                           ]
-                              },
-                 "Texas" : { "Dallas" : [{"id" : "1", "lat" : 32.4767, "lon" : 96.7970, "on_zayo" : "no"},
-                                         {"id" : "2", "lat" : 32.3267, "lon" : 96.6970, "on_zayo" : "yes"},
-                                         {"id" : "3", "lat" : 32.7367, "lon" : 96.7470, "on_zayo" : "no"},
-                                         {"id" : "4", "lat" : 32.2767, "lon" : 96.2970, "on_zayo" : "yes"}
-                                        ]
-                           },
-                 "Georgia" : { "Atlanta" : [{"id" : "1", "lat" : 33.5490, "lon" : 84.2880, "on_zayo" : "yes"},
-                                            {"id" : "2", "lat" : 33.7690, "lon" : 84.3380, "on_zayo" : "no"},
-                                            {"id" : "3", "lat" : 33.7490, "lon" : 84.9880, "on_zayo" : "yes"},
-                                            {"id" : "4", "lat" : 33.4490, "lon" : 84.7880, "on_zayo" : "yes"}
-                                           ]
-                             }
-                }
 
 
-
-
-
-var cities_lat_lon = { "Colorado" : {"lat" : 39.5501, "lon" : -105.7821},
-                       "Texas" : {"lat" : 31.9686, "lon" : -99.9018},
-                       "Georgia" : {"lat" : 32.1656, "lon" : -82.9001},
-                     }
 
 
 
@@ -354,7 +328,14 @@ function mapCityToState(g, projection) {
 
 
 
-function initializeVis_2(vis_container_id, scale=1000) {
+
+
+
+
+
+
+
+function initializeMainVisualization(vis_container_id=1, scale=1000) {
   
   
   var active = d3.select(null);
@@ -369,17 +350,40 @@ function initializeVis_2(vis_container_id, scale=1000) {
                      .translate([width/2, height/2])    // translate to center of screen
                      .scale([scale]);          // scale things down so see entire US
 
+  
   // Define path generator
   var path = d3.geoPath()               // path generator that will convert GeoJSON to SVG paths
                .projection(projection);  // tell path generator to use albersUsa projection
   
   
-
-  // Define linear scale for output
-  var color = d3.scaleLinear()
-                .range(["rgb(213,222,217)","rgb(69,173,168)","rgb(84,36,55)","rgb(217,91,67)"]);
-
   
+
+//  // Define linear scale for output
+//  var color = d3.scaleLinear()
+//                .range(["rgb(213,222,217)","rgb(69,173,168)","rgb(84,36,55)","rgb(217,91,67)"]);
+  console.log(INIT_QUERY_DATA);
+  // Get max / min of market profits
+  var profit_min = Object.keys(INIT_QUERY_DATA)
+                      .reduce(function(a, b) { 
+                        console.log("a: " + a);
+                        console.log("b: " + b);
+                        console.log("\n");
+                        return (INIT_QUERY_DATA[a] < INIT_QUERY_DATA[b]) ? INIT_QUERY_DATA[a] : INIT_QUERY_DATA[b];
+                      });
+  
+  console.log(INIT_QUERY_DATA);
+  // Get max / min of market profits
+  var profit_max = Object.keys(INIT_QUERY_DATA)
+                      .reduce(function(a, b) { 
+                        return (INIT_QUERY_DATA[a] > INIT_QUERY_DATA[b]) ? INIT_QUERY_DATA[a] : INIT_QUERY_DATA[b];
+                      });
+  
+  console.log(INIT_QUERY_DATA);
+  console.log("PROFIT MIN: " + profit_min);
+  console.log("PROFIT MAX: " + profit_max);
+  
+  var color = d3.scaleLinear()
+                  .domain([])
 
   
   // Create SVG element and append map to the SVG

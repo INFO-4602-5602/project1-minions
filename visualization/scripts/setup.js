@@ -13,57 +13,29 @@ var VIS_CONTAINER_NUM = 1;
 var current_selection;
 
 
+var system_busy = false;
+
+var data_load_sim_time = 1000;
 
 
-function createNewVis(vis_num) {
+function addRemoveSetupButtons(vis_num=1) {
   
   // Clear the create new visualization button
-  d3.select("#create_vis_button_"+vis_num).remove();
+  d3.select("#create_vis_button").transition().duration(550).style("opacity", 0);
   
-  // Obtain visualization types available
-  var visualization_types = Object.keys(visualizations);
+  d3.select("#reset_button").remove();
+  setTimeout(function() { 
+    d3.select("#create_vis_button").remove();
+  }, 600);
   
-  // Initialize current selection
-  current_selection = visualization_types[0];
-  
-  // Select vis button div
-  var container = d3.select("#vis_"+vis_num+"_button_div");
-  
-  // Create Pulldown menu to select current visualization
-  container.append("select")
-              .attr("id", "dropdown_"+vis_num)
-              .attr("class", "create_vis_"+vis_num+"_buttons")
-              .on("change", function() {
-                  current_selection = d3.select(this).property("value");
-              })
-              .selectAll("option")
-              .data(visualization_types).enter()
-            .append("option")
-              .text(function (d) { return d; })
-  
-  // Add create button
-  container.append("input").data([vis_num])
-            .attr("type", "button")
-            .attr("value", "Create!")
-            .attr("class", function(d) {
-              return "create_vis_"+d+"_buttons";
-            })
-            .on("click", function(d) {
-              // Runs respective visualization initializer
-              visualizations[current_selection](d);
-    
-              // Clears create buttons
-              d3.selectAll(".create_vis_"+d+"_buttons").remove();
-            });
-  
-  
+
   // Create Reset button
+  var container = d3.select("#vis_"+vis_num+"_button_div");
   container.append("input").data([vis_num])
             .attr("type", "button")
             .attr("value", "Reset")
-            .attr("id", function (d) {
-              return "reset_button_"+d;
-            })
+            .style("opacity", 0)
+            .attr("id", "reset_button")
             .on("click", function(d) { 
     
               // Clears the visualization svg
@@ -76,15 +48,21 @@ function createNewVis(vis_num) {
               var container = d3.select("#vis_"+d+"_button_div");
               container.append("input").data([vis_num])
                   .attr("id", function(d) {
-                    return "create_vis_button_"+d;
+                    return "create_vis_button";
                   })
                   .attr("type", "button")
                   .attr("value", "Create New Visualization")
                   .on("click", function(d) {
-                    createNewVis(d);
+                    if (system_busy) { console.log("BUSY!"); return; }
+                    initializeMainVisData();
                   });
-            });
+            })
+            .transition().duration(550).style("opacity", 1);
+  
+  
+  
 }
+
 
 
 function clearVisualization(vis_num) {
@@ -95,7 +73,7 @@ function clearVisualization(vis_num) {
   createSVGContainer(vis_num);
   
   // Remove clear button
-  d3.select("#reset_button_"+vis_num).remove();
+  d3.select("#reset_button").remove();
 
   // Remove back button
   d3.select("#back_button_"+vis_num).remove();
@@ -150,18 +128,85 @@ function setupVisContainer(vis_num) {
   // Create Vis Button
   vis_button_div.append("input").data([vis_num])
                   .attr("id", function(d) {
-                    return "create_vis_button_"+d;
+                    return "create_vis_button";
                   })
                   .attr("type", "button")
                   .attr("value", "Create New Visualization")
                   .on("click", function(d) {
-                    createNewVis(d);
+                    if (system_busy) { console.log("BUSY!"); return; }
+    
+                    initializeMainVisData();
                   });
 
   // Create vis svg container
   createSVGContainer(vis_num);
   
 }
+
+
+
+function initializeMainVisData() {
+  
+  // Flag system as busy
+  system_busy = true;
+  
+  // Define spinner options
+  var opts = {
+                lines: 13 // The number of lines to draw
+              , length: 28 // The length of each line
+              , width: 14 // The line thickness
+              , radius: 0 // The radius of the inner circle
+              , scale: 1 // Scales overall size of the spinner
+              , corners: 1 // Corner roundness (0..1)
+              , color: '#000' // #rgb or #rrggbb or array of colors
+              , opacity: 0.25 // Opacity of the lines
+              , rotate: 0 // The rotation offset
+              , direction: 1 // 1: clockwise, -1: counterclockwise
+              , speed: 1 // Rounds per second
+              , trail: 60 // Afterglow percentage
+              , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+              , zIndex: 2e9 // The z-index (defaults to 2000000000)
+              , className: 'spinner' // The CSS class to assign to the spinner
+              , top: '50%' // Top position relative to parent
+              , left: '50%' // Left position relative to parent
+              , shadow: false // Whether to render a shadow
+              , hwaccel: false // Whether to use hardware acceleration
+              , position: 'absolute' // Element positioning
+            };
+
+
+  
+  
+  
+  // Update create_vis_button button
+  d3.select("#create_vis_button").attr("value", "Collecting Data...");
+  
+  var target = document.getElementById("loading_data_div");
+  
+  // Define spinner
+  var spinner = new Spinner(opts);
+  spinner.spin(target);
+  
+  // AJAX WILL GO HERE
+  setTimeout(function() {
+    
+    // Stop spinner
+    spinner.stop();
+    
+    // Add reset button
+    addRemoveSetupButtons();
+    
+    // Initialize Main vis here
+    initializeMainVisualization();
+    
+    // Flag system as no longer busy
+    system_busy = false;
+  }, data_load_sim_time); 
+  
+  
+}
+
+
 
 
 function initialize() {
@@ -171,15 +216,20 @@ function initialize() {
   
   // Setup vis wrapper
   var vis_wrapper = main_div.append("div").attr("class", "vis_wrapper");
+  
+  // Setup div for loading spinner 
+  d3.select("body").append("div").attr("id", "loading_data_div");
+  
  
   // Create x number of visualization containers
   for (var vis_num=1; vis_num <= VIS_CONTAINER_NUM; vis_num++) {
     var vis_container_id = "vis_"+vis_num+"_div";
     visualization_selections[vis_container_id] = undefined;
     setupVisContainer(vis_num);
+    
   }
   
   // Initialize visualizations
-  visualizations = {"Geo" : initializeVis_2, "Vis 2" : undefined, "Vis 3" : undefined};
+//  visualizations = {"Geo" : initializeVis_2, "Vis 2" : undefined, "Vis 3" : undefined};
 }
 
