@@ -32,7 +32,6 @@ function initializePullDownMenu(d) {
 
 
 
-
 function redrawHistogram(d) {
   d3.selectAll(".histogram").remove();
   initializeHistogram(d);
@@ -41,6 +40,12 @@ function redrawHistogram(d) {
 
 function makeHistogram(histo_data) {
   var data = histo_data;
+  
+  console.log("histogram data");
+  console.log(data);
+  
+  
+  
 
   var formatCount = d3.format(",.0f");
 

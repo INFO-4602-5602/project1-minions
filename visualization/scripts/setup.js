@@ -120,7 +120,7 @@ function setupVisContainer(vis_num) {
   // new VIS DIV
   var vis_div = d3.select(".vis_wrapper").append("div")
                             .attr("id", "vis_"+vis_num+"_div")
-                            .attr("class", "vis_div");
+                            .attr("class", "vis_div six columns well");
   
   
   
@@ -225,14 +225,15 @@ function initialize() {
   // Setup vis wrapper
   var vis_wrapper = main_div.append("div").attr("class", "vis_wrapper");
   
+  
   // Setup div for loading spinner 
   d3.select("body").append("div").attr("id", "loading_data_div");
   
   
   // Create 6 containers
   for (var vis_num=1; vis_num < VIS_CONTAINER_NUM; vis_num++) {
+    var row_div = d3.select("#vis_row" + (1+(Math.floor((vis_num-1)/2))));
     setupVisContainer(vis_num);
   }
-  
 }
 

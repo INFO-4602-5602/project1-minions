@@ -54,11 +54,11 @@ function closeGoogleMap() {
 
 
 
-function createGoogleMap(google_map_div, d, vis_container_id) {
- 
+function createGoogleMap(google_map_div, cityObject, vis_container_id) {
+  
   // Set current market, state lat, and state lon
-  var state_lat = d.lat;
-  var state_lon = d.lon;
+  var state_lat = cityObject.lat;
+  var state_lon = cityObject.lon;
   
   // Set default - map not zoomed
   google_map_zoomed = false;
@@ -71,15 +71,15 @@ function createGoogleMap(google_map_div, d, vis_container_id) {
   });
   
   // Generate buildings
-  generateBuildingsOnMap(google_map_div, d, vis_container_id);
+  generateBuildingsOnMap(google_map_div, cityObject, vis_container_id);
   
 }
 
 
-function refreshGoogleMap(d) {
+function refreshGoogleMap(cityObject) {
   var google_map_div = d3.select("#google_map_2");
   google_map_zoomed = false;
-  createGoogleMap(google_map_div, d, vis_container_id=4);
+  createGoogleMap(google_map_div, cityObject, vis_container_id=4);
   MoveBackToMap(vis_container_id);
   currentGoogleMapCity = undefined;
 }
@@ -425,7 +425,6 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
     }
   }
   
-  console.log(default_filter_key);
   
   // Create Pulldown menu to filter google map
   map_button_div.append("select")
