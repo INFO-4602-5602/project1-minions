@@ -113,7 +113,7 @@ def initialize():
 def initialize_buildings():
     bs = BuildingSchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Buildings.csv', 'rU') as building_file:
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Buildings.csv', 'rU') as building_file:
         reader = csv.DictReader(building_file, ['building_id', 'market', 'street_address',
                                                 'city', 'state', 'postal_code', 'longitude',
                                                 'latitude', 'on_zayo_network_status',
@@ -144,7 +144,7 @@ def initialize_buildings():
 def initialize_accounts():
     acs = AccountSchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Accounts.csv', 'rU') as account_file:
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Accounts.csv', 'rU') as account_file:
         reader = csv.DictReader(account_file, ['account_id', 'industry', 'vertical', 'total_brr', 'annual_revenue',
                                                'number_of_employees', 'dandb_revenue', 'dandb_total_employees'])
         next(reader)
@@ -165,7 +165,7 @@ def initialize_accounts():
 def initialize_sites():
     ss = SitesSchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Sites.csv', 'rU') as site_file:
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Sites.csv', 'rU') as site_file:
         reader = csv.DictReader(site_file, ['site_id', 'account_id', 'building_id'])
         next(reader)
         for l in reader:
@@ -185,7 +185,7 @@ def initialize_sites():
 def initialize_cpq():
     cs = CPQSchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_CPQs.csv', 'rU') as cpq_file:
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_CPQs.csv', 'rU') as cpq_file:
         reader = csv.DictReader(cpq_file, ['cpq_id', 'account_id', 'created_date', 'product_group', 'x36_mrc_list',
                                            'x36_nrr_list', 'x36_npv_list', 'building_id'])
         next(reader)
@@ -211,7 +211,7 @@ def initialize_cpq():
 def initialize_opportunity():
     ops = OpportunitySchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Opportunities.csv',
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Opportunities.csv',
               'rU') as opportunity_file:
         reader = csv.DictReader(opportunity_file, ['opportunity_id', 'account_id', 'stage_name', 'is_closed',
                                                    'is_won', 'created_date', 'terms_in_month', 'service',
@@ -238,7 +238,7 @@ def initialize_opportunity():
 def initialize_services():
     ss = ServiceSchema()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    with open(base_dir + os.path.sep + 'static ' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Services.csv', 'rU') as services_file:
+    with open(base_dir + os.path.sep + 'static' + os.path.sep + 'data' + os.path.sep + 'ZayoHackathonData_Services.csv', 'rU') as services_file:
         reader = csv.DictReader(services_file, ['service_id', 'account_id', 'total_mrr', 'netx_mrc',
                                                 'product_group', 'status', 'building_id'])
         next(reader)
