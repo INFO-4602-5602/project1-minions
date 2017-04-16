@@ -25,8 +25,9 @@ var map_filters = {"On Zayo" : undefined,
 var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
 
-var TOP_N_BUILDINGS = 5;
-var TOP_N_BUILDINGS_DEFAULT = 5;
+
+var TOP_N_BUILDINGS_DEFAULT = 3;
+var TOP_N_BUILDINGS;
 
 var infowindow;
 var filter_key = "profit";
@@ -127,7 +128,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     
     var building_data = CURRENT_BUILDINGS[building];
     var building_id = building_data["building-id"];
-      
+    
+    // Filter!
     var found_building = false;
     for (var k=0; k < filteredBuildingIds.length; k++) {
       var x = filteredBuildingIds[k];
@@ -140,10 +142,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
       continue;
     }
     
-    
   
     // Define city parameters
-//    var buildingCircleColor = (data[building].on_zayo == "Yes") ? "#00FF00" : "#FF0000";
     
     // Get building lat, lon and store it into myLatlng
     var building_lat = building_data.lat;
@@ -193,6 +193,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
                           pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
                         });
     
+    
+    // Update building ID to the new info window
     BUILDING_ID_TO_WINDOW[building_id] = new_infowindow;
     
     
@@ -218,9 +220,6 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
           // update the current google map city
           currentGoogleMapCity = this;
 
-//          // Setup the back button
-//          setupBackButton(2);
-
 
           map.setZoom(15);
           var zoom_level = 15;
@@ -236,13 +235,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     // CITY MOUSEOVER
     buildingCircle.addListener('mouseover', function() {
       
-      
-      infowindow = BUILDING_TO_WINDOW[this.building_id];
-      
+      infowindow = BUILDING_ID_TO_WINDOW[this.building_id];
       
       // Open the infowindow
       infowindow.open(map, buildingCircle);
-      
       
       // Set hover parameters
       var direction, rMin, rMax, time_interval, expansion_factor;
@@ -415,11 +411,21 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
   
   
   
-  var filter_opts = Object.keys(top_x_filter_options);
+  var filter_names = Object.keys(top_x_filter_options);
 
   
   // Initialize at top n at default
   TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
+  
+  default_filter_key = undefined;
+  for (var filter_key in top_x_filter_options) {
+    if (top_x_filter_options[filter_key] == TOP_N_BUILDINGS_DEFAULT) {
+      var default_filter_key = filter_key;
+      break;
+    }
+  }
+  
+  console.log(default_filter_key);
   
   // Create Pulldown menu to filter google map
   map_button_div.append("select")
@@ -431,9 +437,14 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
                     TOP_N_BUILDINGS = top_x_filter_options[key];
                   })
                   .selectAll("option")
-                  .data(filter_opts).enter()
+                  .data(filter_names).enter()
                 .append("option")
-                  .text(function (d, i) { return d; });
+                  .text(function (d, i) { 
+                      if (d == default_filter_key) {
+                        d3.select(this).property("selected", true);
+                      }
+                      return d; 
+                  });
   
   
    
@@ -473,6 +484,8 @@ function checkBuilding(data, building) {
 
 
 function preInitializeGoogleMaps(currentMarketObject, clickedObject) {
+  
+  TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
   
   // CHECK IF MAP ALREADY ON - IF YES, CLOSE
   if (google_map_on) {

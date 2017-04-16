@@ -48,7 +48,9 @@ function makeHistogram(histo_data) {
       margin = {top: 10, right: 30, bottom: 30, left: 30},
       width = +svg.attr("width") - margin.left - margin.right,
       height = +svg.attr("height") - margin.top - margin.bottom,
-      g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      g = svg.append("g")
+              .attr("class", "histogram")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   var x = d3.scaleLinear()
       .rangeRound([0, width]);
@@ -69,11 +71,14 @@ function makeHistogram(histo_data) {
       .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
 
   bar.append("rect")
+      .attr("class", "histogram")
       .attr("x", 1)
       .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-      .attr("height", function(d) { return height - y(d.length); });
+      .attr("height", 100);
+//      .attr("height", function(d) { return height - y(d.length); });
 
   bar.append("text")
+      .attr("class", "histogram")
       .attr("dy", ".75em")
       .attr("y", 6)
       .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
@@ -81,6 +86,7 @@ function makeHistogram(histo_data) {
       .text(function(d) { return formatCount(d.length); });
 
   g.append("g")
+      .attr("class", "histogram")
       .attr("class", "axis axis--x")
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(x));
@@ -104,6 +110,20 @@ function getHistogramData(buildings) {
 
 function initializeHistogram(d) {
   
+  
+  // Text header
+  d3.select("#vis_3_svg_container").append("text")
+            .attr("class", "histogram")
+            .attr("x", 50)
+            .attr("y", 50)
+            .style("font-size", "40px")
+            .style("opacity", 0)
+            .text(function() {
+              return "Market: " + d.city;
+            });
+  
+  
+  
   // Declar the histogram group
   var histo_group = d3.select("#vis_3_svg_container")
                         .append("g")
@@ -114,16 +134,6 @@ function initializeHistogram(d) {
                         .attr("transform", "translate(100, 100)");;
   
  
-  // Text header
-  histo_group.append("text")
-            .attr("class", "histogram")
-            .attr("x", 50)
-            .attr("y", 50)
-            .style("font-size", "40px")
-            .style("opacity", 0)
-            .text(function() {
-              return "Market: " + d.city;
-            });
   
   
   // Test background

@@ -9,7 +9,6 @@ var INIT_QUERY_DATA = { "Dallas" : 5000,
 
 
 
-
 var DENVER_QUERY_DATA = [
                           {"building-id" : "bldg-1",
                            "net prox" : 1272,
