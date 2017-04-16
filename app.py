@@ -2,7 +2,7 @@
 # Imports
 # ----------------------------------------------------------------------------#
 
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, render_template, jsonify, request
 from models import db_session, Building, Accounts, Sites, BuildingSchema2, BuildingSchema, AccountSchema,\
     AccountSchema2, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema
 import csv
@@ -92,11 +92,19 @@ def market_profits():
     markets = ['Denver', 'Atlanta', 'Dallas']
     profits_json = {}
     for m in markets:
-        result = Building().query.filter(Building.market == m) \
-            .filter(Building.on_zayo_network_status == "Not on Zayo Network").all()
-        profits_json[m] = calculate_cpq_profit(result)
+        p = request.cookies.get(m, None)
+        if p is None:
+            result = Building().query.filter(Building.market == m) \
+                .filter(Building.on_zayo_network_status == "Not on Zayo Network").all()
+            profits_json[m] = calculate_cpq_profit(result)
+        else:
+            profits_json[m] = float(p)
 
-    return jsonify(profits_json)
+    resp = jsonify(profits_json)
+    for m in markets:
+        resp.set_cookie(m, str(profits_json[m]))
+
+    return resp
 
 
 @app.route('/initialize')
