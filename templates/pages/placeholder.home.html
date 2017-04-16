@@ -2,9 +2,33 @@
 {% block title %}Home{% endblock %}
 {% block content %}
 
-<div class="page-header">
-  <h1>Sticky footer with fixed navbar</h1>
+<div id="visualization">
+    <div class="container">
+        <br/>
+        <br/>
+        <!-- columns should be the immediate child of a .row -->
+        <div class="row">
+            <div class="six columns well">One</div>
+            <div class="six columns well">Six</div>
+        </div>
+
+        <div class="row">
+            <div class="six columns well">One</div>
+            <div class="six columns well">Six</div>
+        </div>
+
+        <div class="row">
+            <div class="six columns well">One</div>
+            <div class="six columns well">Six</div>
+        </div>
+
+        <div class="row">
+            <div class="twelve columns well">One</div>
+        </div>
+
+
+
+    </div>
 </div>
-<p class="lead">Pin a fixed-height footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added within <code>#wrap</code> with <code>padding-top: 60px;</code> on the <code>.container</code>.</p>
 
 {% endblock %}

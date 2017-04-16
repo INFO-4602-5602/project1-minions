@@ -280,7 +280,7 @@ function mapCityToState(g, projection) {
   
   
   // Add cities (circles)
-  d3.csv("data/cities.csv", function(cities_data) {
+  d3.json("/building_profits/Denver", function(cities_data) {
       var longitude, latitude, city_mark;
 //      var city_group = g.append("g")   
 
@@ -445,13 +445,13 @@ function initializeVis_2(vis_container_id, scale=1000) {
   }
 
   // Load in my states data!
-  d3.csv("data/states.csv", function(error, data) {
+  d3.json("/market_profits", function(error, data) {
     if (error) throw error;
     
     color.domain([0,1,2,3]); // setting the range of the input data
 
     // Load GeoJSON data and merge with states data
-    d3.json("data/us-states.json", function(states_error, json) {
+    d3.json("/static/data/us-states.json", function(states_error, json) {
       if (states_error) throw states_error;
       
       // Loop through each state data value in the .csv file

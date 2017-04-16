@@ -161,7 +161,7 @@ function setupVisContainer(vis_wrapper, i) {
 
 function initializeContainers() {
   // Setup main div
-  var main_div = d3.select("body").append("div").attr("id", "main_div");
+  var main_div = d3.select("#viz").append("div").attr("id", "main_div");
   
   // Setup controls div
   var controls_div = main_div.append("div").attr("id", "controls_div");

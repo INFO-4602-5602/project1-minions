@@ -2,13 +2,14 @@
 # Imports
 # ----------------------------------------------------------------------------#
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 from models import db_session, Building, Accounts, BuildingSchema2, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, \
     OpportunitySchema, ServiceSchema
 import csv
 import os
 from re import sub
 from decimal import Decimal
+import sys
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -54,8 +55,8 @@ def building_profits(market):
                 else:
                     b_json['profit'] = c.x36_npv_list
             building_profits_json.append(b_json)
-        except :
-            print "Unexpected Exception occurred while building profits json"
+        except Exception as e:
+            print "Unexpected Exception occurred while building profits json" + str(e)
 
     return jsonify(result=building_profits_json)
 
