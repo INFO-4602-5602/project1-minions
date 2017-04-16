@@ -140,12 +140,10 @@ function cityClickPrimer(currentMarketObject, clickedObject) {
         // Set spinner target
         var target = document.getElementById("loading_data_div");
         spinner.spin(target);
-
-        // AJAX CITY QUERY WILL GO HERE
-        setTimeout(function() {
+        $.get("/building_profits/"+currentMarketObject.city, function (data) {
 
             // Set data
-            QUERIED_DATA[currentMarketObject.city] = TEST_QUERY_DATA[currentMarketObject.city];
+            QUERIED_DATA[currentMarketObject.city] = data.result;
 
             // Flag system as no longer busy
             system_busy = false;
@@ -158,9 +156,8 @@ function cityClickPrimer(currentMarketObject, clickedObject) {
 
             // Stop spinner
             spinner.stop();
-
-        }, data_load_sim_time);
-
+        });
+        // AJAX CITY QUERY WILL GO HERE
     }
     else {
         // Initialize the building visualizations - Google map and Histogram
