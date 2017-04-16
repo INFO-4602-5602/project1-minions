@@ -7,15 +7,14 @@ var VIS_SVG_CONTAINER_WIDTH = "100%";
 var VIS_SVG_BACKGROUND_HEIGHT = 600;
 var VIS_SVG_BACKGROUND_WIDTH = "100%";
 
-var visualizations;
-var visualization_selections = {};
-var VIS_CONTAINER_NUM = 1;
-var current_selection;
-
+var VIS_CONTAINER_NUM = 6;
 
 var system_busy = false;
 
+
+var spinner;
 var data_load_sim_time = 1000;
+
 
 
 function addRemoveSetupButtons(vis_num=1) {
@@ -115,28 +114,32 @@ function setupVisContainer(vis_num) {
   */
   // new VIS DIV
   var vis_div = d3.select(".vis_wrapper").append("div")
-                            .attr("id", "vis_"+vis_num+"_div");
+                            .attr("id", "vis_"+vis_num+"_div")
+                            .attr("class", "vis_div");
+  
+  
+  
   
   // BUTTON DIV
   var vis_button_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_button_div");
   
+  if (vis_num == 1) { 
+    // Create Vis Button
+    vis_button_div.append("input").data([vis_num])
+                    .attr("id", function(d) {
+                      return "create_vis_button";
+                    })
+                    .attr("type", "button")
+                    .attr("value", "Create New Visualization")
+                    .on("click", function(d) {
+                      if (system_busy) { console.log("BUSY!"); return; }
+
+                      initializeMainVisData();
+                    });
+  }
+  
   // SVG DIV
-  var vis_svg_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
-  // --------------------------------------------------------------------------------------
-  
-  
-  // Create Vis Button
-  vis_button_div.append("input").data([vis_num])
-                  .attr("id", function(d) {
-                    return "create_vis_button";
-                  })
-                  .attr("type", "button")
-                  .attr("value", "Create New Visualization")
-                  .on("click", function(d) {
-                    if (system_busy) { console.log("BUSY!"); return; }
-    
-                    initializeMainVisData();
-                  });
+    var vis_svg_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
 
   // Create vis svg container
   createSVGContainer(vis_num);
@@ -150,41 +153,12 @@ function initializeMainVisData() {
   // Flag system as busy
   system_busy = true;
   
-  // Define spinner options
-  var opts = {
-                lines: 13 // The number of lines to draw
-              , length: 28 // The length of each line
-              , width: 14 // The line thickness
-              , radius: 0 // The radius of the inner circle
-              , scale: 1 // Scales overall size of the spinner
-              , corners: 1 // Corner roundness (0..1)
-              , color: '#000' // #rgb or #rrggbb or array of colors
-              , opacity: 0.25 // Opacity of the lines
-              , rotate: 0 // The rotation offset
-              , direction: 1 // 1: clockwise, -1: counterclockwise
-              , speed: 1 // Rounds per second
-              , trail: 60 // Afterglow percentage
-              , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
-              , zIndex: 2e9 // The z-index (defaults to 2000000000)
-              , className: 'spinner' // The CSS class to assign to the spinner
-              , top: '50%' // Top position relative to parent
-              , left: '50%' // Left position relative to parent
-              , shadow: false // Whether to render a shadow
-              , hwaccel: false // Whether to use hardware acceleration
-              , position: 'absolute' // Element positioning
-            };
-
-
-  
-  
-  
   // Update create_vis_button button
   d3.select("#create_vis_button").attr("value", "Collecting Data...");
   
   var target = document.getElementById("loading_data_div");
   
-  // Define spinner
-  var spinner = new Spinner(opts);
+  // Set spinner target
   spinner.spin(target);
   
   // AJAX WILL GO HERE
@@ -202,14 +176,42 @@ function initializeMainVisData() {
     // Flag system as no longer busy
     system_busy = false;
   }, data_load_sim_time); 
-  
-  
 }
 
 
-
+function spinnerSetup() {
+  // Define spinner options
+  var spinner_options = {
+                lines: 13 // The number of lines to draw
+              , length: 28 // The length of each line
+              , width: 14 // The line thickness
+              , radius: 0 // The radius of the inner circle
+              , scale: 1.5 // Scales overall size of the spinner
+              , corners: 1 // Corner roundness (0..1)
+              , color: '#ff9933' // #rgb or #rrggbb or array of colors
+              , opacity: 0.25 // Opacity of the lines
+              , rotate: 0 // The rotation offset
+              , direction: 1 // 1: clockwise, -1: counterclockwise
+              , speed: 1 // Rounds per second
+              , trail: 60 // Afterglow percentage
+              , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+              , zIndex: 2e9 // The z-index (defaults to 2000000000)
+              , className: 'spinner' // The CSS class to assign to the spinner
+              , top: '50%' // Top position relative to parent
+              , left: '50%' // Left position relative to parent
+              , shadow: false // Whether to render a shadow
+              , hwaccel: false // Whether to use hardware acceleration
+              , position: 'absolute' // Element positioning
+            };
+  
+  // Define spinner
+  spinner = new Spinner(spinner_options);
+}
 
 function initialize() {
+  
+  // Setup data load spinner
+  spinnerSetup();
   
   // Setup main div
   var main_div = d3.select("#main_div");
@@ -220,16 +222,13 @@ function initialize() {
   // Setup div for loading spinner 
   d3.select("body").append("div").attr("id", "loading_data_div");
   
- 
-  // Create x number of visualization containers
-  for (var vis_num=1; vis_num <= VIS_CONTAINER_NUM; vis_num++) {
-    var vis_container_id = "vis_"+vis_num+"_div";
-    visualization_selections[vis_container_id] = undefined;
-    setupVisContainer(vis_num);
+  
+  
+  // Create 6 containers
+  for (var vis_num=1; vis_num < VIS_CONTAINER_NUM; vis_num++) {
     
+    setupVisContainer(vis_num);
   }
   
-  // Initialize visualizations
-//  visualizations = {"Geo" : initializeVis_2, "Vis 2" : undefined, "Vis 3" : undefined};
 }
 

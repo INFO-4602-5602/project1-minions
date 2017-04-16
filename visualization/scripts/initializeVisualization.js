@@ -18,10 +18,9 @@
 
 var tool_tip_minimized, map_filter_minimized;
 var cities_off = false;
-var tree_mode = false;
 
 
-var city_color_selected = '#00ff00';
+var city_color_selected = '#6666ff';
 var city_color_hover = "#00FFFF";
 var city_color_unselected = "rgb(217,91,67)";
 
@@ -36,6 +35,7 @@ var height = 600;
 
 
 
+var QUERIED_DATA = {};
 
 
 
@@ -76,11 +76,7 @@ function removeCityItemTransition(item_id) {
 
 
 function MoveBackToMap(vis_container_id) {
-  // Turn off tree mode
-  tree_mode = false;
   
-  // Remove visualization 1
-  d3.select("#collapsible_tree_"+vis_container_id).remove();
 
   // Remove back button
   d3.select("#back_button_"+vis_container_id).remove();
@@ -91,21 +87,6 @@ function MoveBackToMap(vis_container_id) {
   
 }
 
-function setupBackButton(vis_container_id) {
-  var container = d3.select("#vis_"+vis_container_id+"_button_div");
-  
-  // Create back button
-  container.append("input").data([vis_container_id])
-            .attr("type", "button")
-            .attr("value", "Back")
-            .attr("id", function (d) {
-              return "back_button_"+d;
-            })
-            .on("click", function(d) { 
-              MoveBackToMap(d);
-            });
-  
-}
 
               
 function removeFilterInfo(i=1) {
@@ -120,51 +101,73 @@ function addFilterInfo(i=1) {
 }
 
 
-function cityClick(d, object_this) {
-  if (google_map_on) {
-    // Close map
-    closeGoogleMap();
 
-    var current_city = Object.keys(selected_city)[0];
-    selected_city[current_city].style.fill = city_color_unselected;
-    selected_city[current_city].style.stroke = null;
 
-    selected_city = {};
+
+function initializeBuildingVisualizations(d, object_this) {
+  // Setup the building GOOGLE MAP
+  initializeGoogleMaps(d, object_this);  
+  
+  // Setup the building HISTOGRAM
+  initializeBuildingHistogram(d, object_this);
+}
+
+
+
+
+function cityClickPrimer(d, object_this) {
+  
+  // Check if market info previously queried and already stored:
+  var city_data_previously_queried = checkCityData(d);
+  
+  
+  // Set color of city
+ // Set city to selected color
+  var city_stroke = (google_map_on) ? "none" : "black";
+  var city_fill = (google_map_on) ? city_color_unselected : city_color_selected;
+  object_this.style.stroke = city_stroke;
+  object_this.style.fill = city_fill;
+  
+  
+  if (!city_data_previously_queried) {
+    QUERIED_DATA[d.city] = undefined;
     
-    var object_this_city = object_this.id.split("_")
-    object_this_city = object_this_city[object_this_city.length-1];
     
-    if (current_city != object_this_city) {
-      setTimeout(function() {
-        cityClick(d, object_this);  
-      }, 1000)
+    // Flag system as busy
+    system_busy = true;
+
+    // Update create_vis_button button
+//    d3.select("#create_vis_button").attr("value", "Collecting Data...");
+
+    // Set spinner target
+    var target = document.getElementById("loading_data_div");
+    spinner.spin(target);
+
+    // AJAX CITY QUERY WILL GO HERE
+    setTimeout(function() {
+
+      // Stop spinner
+      spinner.stop();
+
       
-    }
-    
-    // Turn off text
-    d3.select("#city_text_"+current_city).transition().duration(750).style("opacity", 0).style("display", "hidden");
-    
-    // Remove filter information
-    removeFilterInfo();
+      // Set data
+      QUERIED_DATA[d.city] = TEST_QUERY_DATA[d.city];
+
+      // Flag system as no longer busy
+      system_busy = false;
+      
+      // Initialize the building visualizations - Google map and Histogram
+      initializeBuildingVisualizations(d, object_this);
+      
+    }, data_load_sim_time); 
     
   }
   else {
-    // Open map
-    initializeGoogleMap(1, d.lat, d.lon);
-
-    // Set city to selected color
-    object_this.style.stroke = "black";
-    object_this.style.fill = city_color_selected;
-
-    // Set current city
-    selected_city[d.city] = object_this;
-
-    // Turn on text
-    d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");
-    
-    // Add filter information
-    addFilterInfo();
+    // Initialize the building visualizations - Google map and Histogram
+    initializeBuildingVisualizations(d, object_this);
   }
+  
+  
 }
 
 
@@ -247,6 +250,14 @@ function cityMouseOut(d) {
 }
 
 
+
+function checkCityData(d) {
+  var city = d.city;
+  var return_val = (city in QUERIED_DATA) ? true : false;
+  
+  return return_val;
+}
+
 function mapCityToState(g, projection) {
   
   // Remove items
@@ -287,7 +298,7 @@ function mapCityToState(g, projection) {
                       .style("fill", city_color_unselected)	
                       .style("opacity", 0)
                       .on("click", function(d) {
-                        cityClick(d, this);
+                        cityClickPrimer(d, this);
                       })
                       .on("mouseover", function(d) {
                           cityMouseOver(d);
@@ -361,30 +372,19 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
 //  // Define linear scale for output
 //  var color = d3.scaleLinear()
 //                .range(["rgb(213,222,217)","rgb(69,173,168)","rgb(84,36,55)","rgb(217,91,67)"]);
-  console.log(INIT_QUERY_DATA);
-  // Get max / min of market profits
-  var profit_min = Object.keys(INIT_QUERY_DATA)
-                      .reduce(function(a, b) { 
-                        console.log("a: " + a);
-                        console.log("b: " + b);
-                        console.log("\n");
-                        return (INIT_QUERY_DATA[a] < INIT_QUERY_DATA[b]) ? INIT_QUERY_DATA[a] : INIT_QUERY_DATA[b];
-                      });
   
-  console.log(INIT_QUERY_DATA);
-  // Get max / min of market profits
-  var profit_max = Object.keys(INIT_QUERY_DATA)
-                      .reduce(function(a, b) { 
-                        return (INIT_QUERY_DATA[a] > INIT_QUERY_DATA[b]) ? INIT_QUERY_DATA[a] : INIT_QUERY_DATA[b];
-                      });
+  var profits = Object.keys( INIT_QUERY_DATA ).map(function ( key ) { return INIT_QUERY_DATA[key]; });
   
-  console.log(INIT_QUERY_DATA);
-  console.log("PROFIT MIN: " + profit_min);
-  console.log("PROFIT MAX: " + profit_max);
+  var profit_min = Math.min.apply( null, profits );
+  var profit_max = Math.max.apply( null, profits );
+  var pivot_value = profit_max*0.8;
+  
   
   var color = d3.scaleLinear()
-                  .domain([])
+                  .domain([profit_min, pivot_value, profit_max])
+                  .range(["#ffcccc", "#66ff66"]);
 
+  
   
   // Create SVG element and append map to the SVG
   var svg = d3.select("#vis_"+vis_container_id+"_svg_container")
@@ -395,14 +395,11 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
   svg.call(zoom);
                 
                 
-  var g = svg.append("g").attr("id", "svg_g");
+  var g = svg.append("g").attr("id", "svg_g_"+vis_container_id);
   
   
   function clicked(d) {
     
-    if (tree_mode) {
-      return;
-    }
     if (active.node() === this) {
       // ZOOM OUT
       mapCityToState(g, projection);
@@ -450,10 +447,9 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
   }
 
   // Load in my states data!
-  d3.csv("data/states.csv", function(error, data) {
+  d3.csv("data/markets.csv", function(error, data) {
     if (error) throw error;
     
-    color.domain([0,1,2,3]); // setting the range of the input data
 
     // Load GeoJSON data and merge with states data
     d3.json("data/us-states.json", function(states_error, json) {
@@ -462,11 +458,10 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
       // Loop through each state data value in the .csv file
       for (var i = 0; i < data.length; i++) {
 
-          // Grab State Name
-          var dataState = data[i].state;
-
-          // Grab data value 
-          var dataValue = data[i].visited;
+          // Grab Market and State Name
+          var dataMarket = data[i].market;
+          var dataState = MARKET_TO_STATE[dataMarket];
+          
 
           // Find the corresponding state inside the GeoJSON
           for (var j = 0; j < json.features.length; j++)  {
@@ -475,7 +470,9 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
               if (dataState == jsonState) {
 
                 // Copy the data value into the JSON
-                json.features[j].properties.visited = dataValue; 
+                json.features[j].properties.selected = true; 
+                
+                json.features[j].properties.market = dataMarket; 
 
                 // Stop looking through the JSON
                 break;
@@ -509,11 +506,16 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
           .style("stroke-width", "1")
           .style("fill", function(d) {
             // Get data value
-            var value = d.properties.visited;
-
+            var value = d.properties.selected;
+        
             if (value) {
               //If value exists…
-              return color(value);
+              var market = d.properties.market;
+              var states_profit = INIT_QUERY_DATA[market];
+
+              var stateColor = color(states_profit);
+              
+              return stateColor;
             } 
             else {
               //If value is undefined…
@@ -534,5 +536,19 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
 
 
 
-
+function setupBackButton(vis_container_id) {
+  var container = d3.select("#vis_"+vis_container_id+"_button_div");
+  
+  // Create back button
+  container.append("input").data([vis_container_id])
+            .attr("type", "button")
+            .attr("value", "Back")
+            .attr("id", function (d) {
+              return "back_button_"+d;
+            })
+            .on("click", function(d) { 
+              MoveBackToMap(d);
+            });
+  
+}
 

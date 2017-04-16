@@ -1,22 +1,15 @@
 
 
 /* CODE FOR GOOGLE MAP */
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
 
-/*.google_map, ,  {*/
 .google_map_container  {
 /*  border: 1px solid black;*/
-  --width: 40%;
+  --width: 100%;
   margin: 0;
   padding: 0;
   position: relative;
   top: -600px;
-  float: right;
+  
   z-index: 99;
 }
 
@@ -27,7 +20,7 @@ html, body {
 .google_map {
 /*  border: 1px solid black;*/
   width: 100%;
-  height: 30%;
+  height: 50%;
 }
 
 .google_map_button {
@@ -47,26 +40,12 @@ html, body {
 }
 
 
-.active_item {
-  display: block;
-}
 
-
-.inactive_item {
-  display: none;
-}
-
-
-
-#geoToolTipSVG {
-  width: 500;
-  height: 200;
-}
 
 
 
 .google_map_buttons {
-  float: right;
+  float: left;
 }
 
 
@@ -90,4 +69,16 @@ html, body {
 #filter_background_svg {
   z-index: -1;
   position: inline;
+  height: 100%;
+  width: 100%;
+}
+
+
+.filter_area_svg {
+  
+  width: 80%;
+}
+
+.google_infobox {
+  float: right;
 }

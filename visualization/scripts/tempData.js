@@ -1,7 +1,13 @@
-var INIT_QUERY_DATA = { "Dallas" : 100,
+var INIT_QUERY_DATA = { "Dallas" : 5000,
                         "Denver" : 10000,
-                        "Atlanta" : 10
+                        "Atlanta" : 1000
                       };
+
+
+var MARKET_TO_STATE = { "Dallas" : "Texas",
+                        "Denver" : "Colorado",
+                        "Atlanta" : "Georgia"};
+
 
 
 
@@ -12,49 +18,49 @@ var DENVER_QUERY_DATA = [
                            "build cost" : 51000,
                            "profit" : 1,
                            "lat" : 39.9181398,
-                           "lng" : -104.9923762
+                           "lon" : -104.9923762
                            },
                            {"building-id" : 2,
                            "net prox" : 1709,
                            "build cost" : 64000,
                            "profit" : 10,
                            "lat" : 39.717668,
-                           "lng" : -104.89778
+                           "lon" : -104.89778
                            },
                            {"building-id" : 3,
                            "net prox" : 273,
                            "build cost" : 25000,
                            "profit" : 100,
                            "lat" : 39.571728,
-                           "lng" : -104.855645
+                           "lon" : -104.855645
                            },
                            {"building-id" : 4,
                            "net prox" : 314,
                            "build cost" : 27000,
                            "profit" : 1000,
                            "lat" : 39.6043361,
-                           "lng" : -104.9028449
+                           "lon" : -104.9028449
                            },
                            {"building-id" : 5,
                            "net prox" : 763,
                            "build cost" : 35000,
                            "profit" : 10000,
                            "lat" : 39.7754201,
-                           "lng" : -104.8410194
+                           "lon" : -104.8410194
                            },
                            {"building-id" : 6,
                            "net prox" : 32.94,
                            "build cost" : 14000,
                            "profit" : 100000,
                            "lat" : 39.7249803,
-                           "lng" : -105.1653267
+                           "lon" : -105.1653267
                            },
                            {"building-id" : 7,
                            "net prox" : 494,
                            "build cost" : 35000,
                            "profit" : 1000000,
                            "lat" : 39.7406764,
-                           "lng" : -104.9888748
+                           "lon" : -104.9888748
                            }
                         ];
 
@@ -66,49 +72,49 @@ var DALLAS_QUERY_DATA = [
                            "build cost" : 240000,
                            "profit" : 1,
                            "lat" : 32.8659117,
-                           "lng" : -96.9395651
+                           "lon" : -96.9395651
                            },
                            {"building-id" : 2,
                            "net prox" : 266,
                            "build cost" : 280000,
                            "profit" : 10,
                            "lat" : 32.79903,
-                           "lng" : -96.7806839
+                           "lon" : -96.7806839
                            },
                            {"building-id" : 3,
                            "net prox" : 10284,
                            "build cost" : 270000,
                            "profit" : 100,
                            "lat" : 32.6834435,
-                           "lng" : -97.1158564
+                           "lon" : -97.1158564
                            },
                            {"building-id" : 4,
                            "net prox" : 6113,
                            "build cost" : 165000,
                            "profit" : 1000,
                            "lat" : 32.7018237,
-                           "lng" : -97.0527092
+                           "lon" : -97.0527092
                            },
                            {"building-id" : 5,
                            "net prox" : 626,
                            "build cost" : 28000,
                            "profit" : 10000,
                            "lat" : 32.979841,
-                           "lng" : -96.7118318
+                           "lon" : -96.7118318
                            },
                            {"building-id" : 6,
                            "net prox" : 535,
                            "build cost" : 25000,
                            "profit" : 100000,
                            "lat" : 32.8879831,
-                           "lng" : -96.9400461
+                           "lon" : -96.9400461
                            },
                            {"building-id" : 7,
                            "net prox" : 112,
                            "build cost" : 18700,
                            "profit" : 1000000,
                            "lat" : 32.778886,
-                           "lng" : -96.798705
+                           "lon" : -96.798705
                            }
                         ];
 
@@ -119,48 +125,53 @@ var ATLANTA_QUERY_DATA = [
                            "build cost" : 14000,
                            "profit" : 1,
                            "lat" : 33.7285213,
-                           "lng" : -84.4187515
+                           "lon" : -84.4187515
                            },
                            {"building-id" : 2,
                            "net prox" : 28323,
                            "build cost" : 690000,
                            "profit" : 10,
                            "lat" : 33.9467,
-                           "lng" : -83.995
+                           "lon" : -83.995
                            },
                            {"building-id" : 3,
                            "net prox" : 117,
                            "build cost" : 15000,
                            "profit" : 100,
                            "lat" : 33.8317,
-                           "lng" : -84.3239
+                           "lon" : -84.3239
                            },
                            {"building-id" : 4,
                            "net prox" : 23,
                            "build cost" : 11000,
                            "profit" : 1000,
                            "lat" : 33.9189871,
-                           "lng" : -84.3640909
+                           "lon" : -84.3640909
                            },
                            {"building-id" : 5,
                            "net prox" : 2620,
                            "build cost" : 73000,
                            "profit" : 10000,
                            "lat" : 33.867537,
-                           "lng" : -84.475962
+                           "lon" : -84.475962
                            },
                            {"building-id" : 6,
                            "net prox" : 370,
                            "build cost" : 21000,
                            "profit" : 100000,
                            "lat" : 33.9996997,
-                           "lng" : -84.1639353
+                           "lon" : -84.1639353
                            },
                            {"building-id" : 7,
                            "net prox" : 630,
                            "build cost" : 25000,
                            "profit" : 1000000,
                            "lat" : 33.9353178,
-                           "lng" : -84.3403168
+                           "lon" : -84.3403168
                            }
                         ];
+
+var TEST_QUERY_DATA = { "Denver" : DENVER_QUERY_DATA,
+                        "Dallas" : DALLAS_QUERY_DATA,
+                        "Atlanta" : ATLANTA_QUERY_DATA
+                      };

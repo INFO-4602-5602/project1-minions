@@ -1,6 +1,8 @@
 // http://stackoverflow.com/questions/17992543/how-do-i-drag-an-image-smoothly-around-the-screen-using-pure-javascript
 // http://jsfiddle.net/vZv5k/
 
+// http://stackoverflow.com/questions/7044587/adding-multiple-markers-with-infowindows-google-maps-api
+
 var googleMouseOverInterval;
 var currentGoogleMapCity;
 var google_map_zoomed = false;
@@ -20,6 +22,12 @@ var map_filters = {"On Zayo" : undefined,
                    "Estimated Build Cost" : undefined};
 
 
+var buildingCircleColor = "#00ff00";
+var buildingCircleStroke = "#0000ff";
+
+
+var infowindow;
+
 function closeGoogleMap() {
   d3.selectAll(".google_map_container").transition().duration(1000).style("opacity", 0).remove();  
   d3.selectAll(".google_map_buttons").transition().duration(1000).style("opacity", 0).remove();  
@@ -28,8 +36,13 @@ function closeGoogleMap() {
 
 
 
-function createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id) {
+function createGoogleMap(google_map_div, d, vis_container_id) {
   
+  // Set current market, state lat, and state lon
+  var state_lat = d.lat;
+  var state_lon = d.lon;
+  
+  // Set default - map not zoomed
   google_map_zoomed = false;
   
   // Create the Google Map…
@@ -39,114 +52,191 @@ function createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id)
       mapTypeId: google.maps.MapTypeId.TERRAIN
   });
   
-  // Read the buildings.json
-  d3.json("data/buildings.json", function(error, data) {
-    if (error) throw error;
-   
-    for (var building in data) {
-      
-      var plot_building = checkBuilding(data, building);
-      if (!plot_building) {
-        continue;
-      }
-      
-      // Define city parameters
-      var cityCircleColor = (data[building].on_zayo == "Yes") ? "#00FF00" : "#FF0000";
-      var myLatlng = data[building].center;
-      
-      // Add the circle for this city to the map.
-      var cityCircle = new google.maps.Circle({
-        strokeColor: cityCircleColor,
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: cityCircleColor,
-        fillOpacity: 0.35,
-        map: map,
-        title: "Click to Zoom",
-        center: myLatlng,
-        radius: 1000
-      });
-      
-    
-      
-      
-      // CITY CLICK
-      cityCircle.addListener('click', function() {
-          
-          if (tree_mode) {
-            createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id);
-            MoveBackToMap(vis_container_id);
-            currentGoogleMapCity = undefined;
-            return;
-          }
-          
-          if (google_map_zoomed) {
-            google_map_zoomed = false;
-            createGoogleMap(google_map_div, state_lat, state_lon, vis_container_id);
-            MoveBackToMap(vis_container_id);
-            currentGoogleMapCity = undefined;
-            return;
-          }
-        
-
-          
-          google_map_zoomed = true;
-          currentGoogleMapCity = this;
-        
-          d3.select("#svg_g").transition().duration(500).style("opacity", 0.1);
-          setupBackButton(1);
-          tree_mode = true;
-          initializeVis_1(1);
-          map.setZoom(15);
-          var zoom_level = 15;
-          map.setCenter(this.getCenter());
-        
-          this.setRadius(40);
-          this.setOptions({fillOpacity : 0.5});
-      });
-      
-
-      
-      // CITY MOUSEOVER
-      cityCircle.addListener('mouseover', function() {
-        if (!google_map_zoomed) {
-          return;
-        }
-        
-        var direction = 1;
-        var rMin = 10, rMax = 100;
-        var time_interval = 50;
-        
-        googleMouseOverInterval = setInterval(function() {
-          try {
-            var radius = currentGoogleMapCity.getRadius();
-            if ((radius > rMax) || (radius < rMin)) {
-                direction *= -1;
-            }
-            currentGoogleMapCity.setRadius(radius + direction * 5);
-          }
-          catch(err) {
-            return;
-          }  
-        }, time_interval);
-      });
-      
-      
-      // CITY MOUSEOUT
-      cityCircle.addListener('mouseout', function() {
-        
-        if (currentGoogleMapCity == undefined) {
-          return;
-        }
-        
-        clearInterval(googleMouseOverInterval);
-        currentGoogleMapCity.setRadius(40);
-      });
-    }
-  });
+  // Generate buildings
+  generateBuildingsOnMap(google_map_div, d, vis_container_id);
+  
 }
 
 
+
+function filterTopXBuildings(N=10) {
+  return true;
+}
+          
+function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
+  
+  // Set current market 
+  var current_market = d.city;
+  
+  // USE THE QUERY DATA HERE
+  var CURRENT_BUILDINGS = QUERIED_DATA[current_market];
+  
+  
+  for (var building in CURRENT_BUILDINGS) {
+    
+    var plot_building = filterTopXBuildings();
+    if (!plot_building) {
+      continue;
+    }
+    
+    var building_data = CURRENT_BUILDINGS[building];
+    
+  // FILTER TOP 10  
+//    var plot_building = checkBuilding(data, building);
+//    if (!plot_building) {
+//      continue;
+//    }
+//  
+  
+  
+    // Define city parameters
+//    var buildingCircleColor = (data[building].on_zayo == "Yes") ? "#00FF00" : "#FF0000";
+    
+    // Get building lat, lon and store it into myLatlng
+    var building_lat = building_data.lat;
+    var building_lon = building_data.lon;
+    
+    var myLatlng = {"lng" : building_lon, "lat" : building_lat};
+    
+    
+    // Add the circle for this city to the map.
+    var buildingCircle = new google.maps.Circle({
+      strokeColor: buildingCircleStroke,
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: buildingCircleColor,
+      fillOpacity: 0.35,
+      map: map,
+      title: undefined,
+      center: myLatlng,
+      radius: 2500,
+      
+      // Custom attributes
+      building_id: building_data["building-id"],
+      build_cost: building_data["build cost"],
+      net_proximity: building_data["net prox"],
+      profit: building_data["profit"],
+      
+    });
+    
+    
+
+    
+    
+    // CITY CLICK
+    buildingCircle.addListener('click', function() {
+        
+        // Remove interval behavior, if any;
+        clearInterval(googleMouseOverInterval);
+      
+        if (google_map_zoomed) {
+          google_map_zoomed = false;
+          createGoogleMap(google_map_div, d, vis_container_id);
+          MoveBackToMap(vis_container_id);
+          currentGoogleMapCity = undefined;
+        }
+        else {
+          // ACTIVATE CLICK
+          // set flags
+          google_map_zoomed = true;
+
+          // update the current google map city
+          currentGoogleMapCity = this;
+
+          // Setup the back button
+          setupBackButton(2);
+
+
+          map.setZoom(15);
+          var zoom_level = 15;
+          map.setCenter(this.getCenter());
+
+          this.setRadius(40);
+          this.setOptions({fillOpacity : 0.5});
+        }
+    });
+
+
+
+    // CITY MOUSEOVER
+    buildingCircle.addListener('mouseover', function() {
+      
+      
+      // Get circle info for infowindow;
+      var building_id = buildingCircle.building_id;
+      var build_cost = buildingCircle.build_cost;
+      var net_proximity = buildingCircle.net_proximity;
+      var profit = buildingCircle.profit;
+      
+      // Info window
+      infowindow_content = '<h1> Building Information </h1>' +
+                            '<p> Building ID: ' + building_id + '</p>' + 
+                            '<p> Build Cost: ' + build_cost + '</p>' + 
+                            '<p> Net Proximity: ' + net_proximity + '</p>' + 
+                            '<p> Profit: ' + profit + '</p>';
+      
+      infowindow = new google.maps.InfoWindow( {
+                            content: infowindow_content,
+                            pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
+                          });
+
+      infowindow.open(map, buildingCircle);
+      
+      
+      // Set hover parameters
+      var direction, rMin, rMax, time_interval, expansion_factor;
+      
+      direction = 1;
+      
+      // Check if zoomed or not
+      if (!google_map_zoomed) {
+        currentGoogleMapCity = this;
+        rMin = 2000;
+        rMax = 3000;
+        time_interval = 50;
+        expansion_factor = 50;
+      }
+      else {
+        rMin = 10;
+        rMax = 100;
+        time_interval = 50;
+        expansion_factor = 5;
+      }
+
+
+      googleMouseOverInterval = setInterval(function() {
+        try {
+          var radius = currentGoogleMapCity.getRadius();
+          if ((radius > rMax) || (radius < rMin)) {
+              direction *= -1;
+          }
+          currentGoogleMapCity.setRadius(radius + direction * expansion_factor);
+        }
+        catch(err) {
+          return;
+        }  
+      }, time_interval);
+    });
+
+
+    // CITY MOUSEOUT
+    buildingCircle.addListener('mouseout', function() {
+      infowindow.close();
+      infowindow = undefined;
+      if (currentGoogleMapCity == undefined) {
+        return;
+      }
+      
+      clearInterval(googleMouseOverInterval);
+      
+      // Reset radius
+      var default_radius = (google_map_zoomed) ? 40 : 2500;
+      currentGoogleMapCity.setRadius(default_radius);
+      
+      currentGoogleMapCity = (google_map_zoomed) ? currentGoogleMapCity : undefined;
+    });
+  }
+}
 
 
 
@@ -235,7 +325,9 @@ function setupFilters(google_map_filter_div) {
 
 
 
-function initializeGoogleMap(i, state_lat, state_lon) {
+function initializeGoogleMap(i, d) {
+  
+  
   
   // Remove previous buttons
   d3.selectAll(".google_map_buttons").remove();
@@ -254,7 +346,7 @@ function initializeGoogleMap(i, state_lat, state_lon) {
   
   
   // Setup div for buttons
-  var map_button_div = d3.select("#vis_1_button_div");
+  var map_button_div = d3.select("#vis_"+i+"_button_div");
   
   
   // Setup div for google map
@@ -269,12 +361,6 @@ function initializeGoogleMap(i, state_lat, state_lon) {
                                             .attr("class", "geoToolTip");
   
   
-  // Setup header div for filter
-  var filter_header_div = google_map_filter_div.append("div").attr("id", "filter_header_div");
-  
-  // Add filter buttons
-  filter_header_div.html("Filter");
-  
   
   // Setup filter area
   var filter_area_div = google_map_filter_div.append("div").attr("id", "filter_area_div");
@@ -282,16 +368,13 @@ function initializeGoogleMap(i, state_lat, state_lon) {
   
   // Setup filter area background    
   var filter_area_svg = filter_area_div.append("svg")
-                                        .attr("id", "filler_area_svg_"+i)
-                                        .attr("height", "15%");
+                                        .attr("class", "filter_area_svg");
   
   
   // Add group for backgrounds
   filter_area_svg.append("g")
                   .append("rect")
                     .attr("id", "filter_background_svg")
-                    .attr("height", "100%")
-                    .attr("width", "100%")
                     .style("fill", FILTER_BACKGROUND)
                     .style("stroke", "black")
                     .style("opacity", 0.75);
@@ -316,10 +399,9 @@ function initializeGoogleMap(i, state_lat, state_lon) {
   // Setup Filters
   setupFilters(google_map_filter_div);
   
-  
 
-  // Load the station data. When the data comes back, create an overlay.
-  createGoogleMap(google_map_div, state_lat, state_lon, i);
+  // Load the station data
+  createGoogleMap(google_map_div, d, i);
   
   
   
@@ -441,10 +523,9 @@ function initializeGoogleMap(i, state_lat, state_lon) {
     .attr("value", "City View")
     .style("opacity", 0)
     .on("click", function(d) {
-      if (tree_mode) {
-        return;
-      }
-      createGoogleMap(google_map_div, state_lat, state_lon, i);
+    
+    
+      createGoogleMap(google_map_div, d, i);
     });
   
  
@@ -464,4 +545,60 @@ function checkBuilding(data, building) {
   var return_val = (on_zayo == "Yes") ? true : false;
   
   return return_val;
+}
+
+
+
+
+
+
+
+
+function initializeGoogleMaps(d, object_this) {
+  
+  // CHECK IF MAP ALREADY ON - IF YES, CLOSE
+  if (google_map_on) {
+    
+    // Close map
+    closeGoogleMap();
+
+    var current_city = Object.keys(selected_city)[0];
+    selected_city[current_city].style.fill = city_color_unselected;
+    selected_city[current_city].style.stroke = null;
+
+    selected_city = {};
+    
+    
+    // CHECK IF OTHER MAP OPEN - CLOSE IT, OPEN NEW ONE
+    if (current_city != d.city) {
+      setTimeout(function() {
+        cityClickPrimer(d, object_this);  
+      }, 1000)
+    }
+    
+    // Turn off city text
+    d3.select("#city_text_"+current_city).transition().duration(750).style("opacity", 0).style("display", "hidden");
+    
+    // Remove filter information
+    removeFilterInfo();
+  }
+  
+  // OPEN MAP
+  else {
+    // Open map
+    initializeGoogleMap(2, d);
+
+    // Set city to selected color
+    object_this.style.stroke = "black";
+    object_this.style.fill = city_color_selected;
+
+    // Set current city
+    selected_city[d.city] = object_this;
+
+    // Turn on text
+    d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");
+    
+    // Add filter information
+    addFilterInfo();
+  }
 }
