@@ -146,8 +146,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
         // Define city parameters
 
         // Get building lat, lon and store it into myLatlng
-        var building_lat = building_data.lat;
-        var building_lon = building_data.lon;
+        var building_lat = building_data.latitude;
+        var building_lon = building_data.longitude;
 
         var myLatlng = {"lng" : building_lon, "lat" : building_lat};
 
