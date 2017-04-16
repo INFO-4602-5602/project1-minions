@@ -129,7 +129,7 @@ class Services(Base):
 class AccountSchema(ModelSchema):
     class Meta:
         model = Accounts
-    sites = fields.Nested("SitesSchema", many=True, exclude=('account', 'building'))
+    sites = fields.Nested("SitesSchema", many=True, exclude=('account',))
     opportunities = fields.Nested("OpportunitySchema", many=True, exclude=('account',))
     services = fields.Nested("ServiceSchema", many=True, exclude=('account',))
 
@@ -145,12 +145,17 @@ class BuildingSchema(ModelSchema):
     class Meta:
         model = Building
     cpqs = fields.Nested("CPQSchema", many=True, exclude=('building',))
-    sites = fields.Nested(SitesSchema, many=True, exclude=('building',))
+    sites = fields.Nested(SitesSchema, many=True, exclude=('account', 'building'))
 
 
 class BuildingSchema2(ModelSchema):
     class Meta:
         model = Building
+
+
+class AccountSchema2(ModelSchema):
+    class Meta:
+        model = Accounts
 
 
 class CPQSchema(ModelSchema):
