@@ -25,8 +25,25 @@ var map_filters = {"On Zayo" : undefined,
 var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
 
+var TOP_N_BUILDINGS = 5;
+var TOP_N_BUILDINGS_DEFAULT = 5;
 
 var infowindow;
+var filter_key = "profit";
+
+var BUILDING_ID_TO_WINDOW = {};
+
+
+// Add top X filter
+  var top_x_filter_options = {"Top 1" : 1,
+                              "Top 2" : 2,
+                              "Top 3" : 3,
+                              "Top 4" : 4,
+                              "Top 5" : 5,
+                              "Top 6" : 6};
+
+
+
 
 function closeGoogleMap() {
   d3.selectAll(".google_map_container").transition().duration(1000).style("opacity", 0).remove();  
@@ -37,7 +54,7 @@ function closeGoogleMap() {
 
 
 function createGoogleMap(google_map_div, d, vis_container_id) {
-  
+ 
   // Set current market, state lat, and state lon
   var state_lat = d.lat;
   var state_lon = d.lon;
@@ -58,11 +75,42 @@ function createGoogleMap(google_map_div, d, vis_container_id) {
 }
 
 
-
-function filterTopXBuildings(N=10) {
-  return true;
+function refreshGoogleMap(d) {
+  var google_map_div = d3.select("#google_map_2");
+  google_map_zoomed = false;
+  createGoogleMap(google_map_div, d, vis_container_id=4);
+  MoveBackToMap(vis_container_id);
+  currentGoogleMapCity = undefined;
 }
+
+
+
           
+
+function sortByFilter(CURRENT_BUILDINGS, N=5) {
+  var sortable = [];
+  for (var bldg_index=0; bldg_index < CURRENT_BUILDINGS.length; bldg_index++) {
+    var current_bldg = CURRENT_BUILDINGS[bldg_index];
+    
+    var bldg_id = current_bldg["building-id"];
+    var filter_attr = current_bldg[filter_key];
+    sortable.push([bldg_id, filter_attr]);
+  }
+  
+  sortable.sort(function(a, b) {
+      return b[1] - a[1];
+  });
+  
+  
+  sorted_building_ids = [];
+  for (var j=0; j < N; j++) {
+    var bldg_id = sortable[j][0];
+    sorted_building_ids.push(bldg_id);
+  }
+  
+  return sorted_building_ids;
+}
+
 function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
   
   // Set current market 
@@ -71,23 +119,28 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
   // USE THE QUERY DATA HERE
   var CURRENT_BUILDINGS = QUERIED_DATA[current_market];
   
+  // Sort the current buildings by filter
+  var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
+  
   
   for (var building in CURRENT_BUILDINGS) {
     
-    var plot_building = filterTopXBuildings();
-    if (!plot_building) {
+    var building_data = CURRENT_BUILDINGS[building];
+    var building_id = building_data["building-id"];
+      
+    var found_building = false;
+    for (var k=0; k < filteredBuildingIds.length; k++) {
+      var x = filteredBuildingIds[k];
+      if (x == building_id) {
+        found_building = true;
+      }
+    }
+    
+    if (!found_building) {
       continue;
     }
     
-    var building_data = CURRENT_BUILDINGS[building];
     
-  // FILTER TOP 10  
-//    var plot_building = checkBuilding(data, building);
-//    if (!plot_building) {
-//      continue;
-//    }
-//  
-  
   
     // Define city parameters
 //    var buildingCircleColor = (data[building].on_zayo == "Yes") ? "#00FF00" : "#FF0000";
@@ -120,7 +173,29 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     });
     
     
+    // Create info window
+    
+    // Get circle info for infowindow;
+    var building_id = buildingCircle.building_id;
+    var build_cost = buildingCircle.build_cost;
+    var net_proximity = buildingCircle.net_proximity;
+    var profit = buildingCircle.profit;
 
+    // Info window
+    infowindow_content = '<h1> Building Information </h1>' +
+                          '<p> Building ID: ' + building_id + '</p>' + 
+                          '<p> Build Cost: ' + build_cost + '</p>' + 
+                          '<p> Net Proximity: ' + net_proximity + '</p>' + 
+                          '<p> Profit: ' + profit + '</p>';
+
+    var new_infowindow = new google.maps.InfoWindow( {
+                          content: infowindow_content,
+                          pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
+                        });
+    
+    BUILDING_ID_TO_WINDOW[building_id] = new_infowindow;
+    
+    
     
     
     // CITY CLICK
@@ -143,8 +218,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
           // update the current google map city
           currentGoogleMapCity = this;
 
-          // Setup the back button
-          setupBackButton(2);
+//          // Setup the back button
+//          setupBackButton(2);
 
 
           map.setZoom(15);
@@ -162,24 +237,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     buildingCircle.addListener('mouseover', function() {
       
       
-      // Get circle info for infowindow;
-      var building_id = buildingCircle.building_id;
-      var build_cost = buildingCircle.build_cost;
-      var net_proximity = buildingCircle.net_proximity;
-      var profit = buildingCircle.profit;
+      infowindow = BUILDING_TO_WINDOW[this.building_id];
       
-      // Info window
-      infowindow_content = '<h1> Building Information </h1>' +
-                            '<p> Building ID: ' + building_id + '</p>' + 
-                            '<p> Build Cost: ' + build_cost + '</p>' + 
-                            '<p> Net Proximity: ' + net_proximity + '</p>' + 
-                            '<p> Profit: ' + profit + '</p>';
       
-      infowindow = new google.maps.InfoWindow( {
-                            content: infowindow_content,
-                            pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
-                          });
-
+      // Open the infowindow
       infowindow.open(map, buildingCircle);
       
       
@@ -221,6 +282,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
 
     // CITY MOUSEOUT
     buildingCircle.addListener('mouseout', function() {
+      
+      
       infowindow.close();
       infowindow = undefined;
       if (currentGoogleMapCity == undefined) {
@@ -242,91 +305,9 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
 
 
 
-function setupFilters(google_map_filter_div) {
-  
-  var filter_names = Object.keys(map_filters);
-
-  // Create Pulldown menu to filter google map
-  var pulldown_1 = d3.select("#dropdown_1_div");
-
-  pulldown_1.append("select")
-                  .attr("id", "filter_pulldown_1")
-                  .on("change", function() {
-    
-                      // Remove previous
-                      d3.select("#"+current_filter_id+"_filter_area_div")
-                          .transition().duration(200)
-                        .style("display", "none")
-                        .style("opacity", 0.0)
-                        .style("zIndex", "-1");
-                      
-                      // Fade in new selected - update current filter
-                      current_filter = d3.select(this).property("value");
-                      current_filter_id = current_filter.split(" ").join("_");
-                      d3.select("#"+current_filter_id+"_filter_area_div")
-                          .transition().duration(200)
-                        .style("display", "inline")
-                        .style("opacity", 1.0)
-                        .style("zIndex", "99");
-                  })
-                  .selectAll("option")
-                  .data(filter_names).enter()
-                .append("option")
-                  .text(function (d, i) { return d; });
-  
-  var index = 0;
-  for (var filter in map_filters) {
-    // Set filter id
-    var filter_id = filter.split(" ").join("_");
-    
-    // Set default display
-    var opacity_value = (index == 0) ? 1 : 0;
-    var display_value = (index == 0) ? "inline" : "none";
-    var zIndex_value = (index == 0) ? "99" : "-1";
-    // Set default current_filter and id
-    if (index == 0) {
-      current_filter = filter;
-      current_filter_id = filter_id;
-    }
-    
-    
-    // Create divs
-    var filter_area_div = google_map_filter_div.append("div")
-              .attr("id", filter_id+"_filter_area_div")
-              .style("display", display_value)
-              .style("opacity", opacity_value)
-              .style("zIndex", zIndex_value);
-    
-    var form_data = ["Yes", "No "];
-        
-    // Add forms to divs
-    filter_area_div.selectAll("input")
-      .data(form_data).enter()
-      .append("label")
-        .attr("for", function(d, i) { return "a" + i; })
-        .text(function(d) { return d; })
-        .style("display", "inline")
-        .style("position", "relative")
-        .style("padding-right", "20px")
-        .style("top", "-100px")
-        .style("left", "50px")
-    
-      .append("input")
-        .attr("type", "checkbox")
-        .attr("checked", true)
-        .attr("name", "name")
-        .attr("value", "value")
-    
-    index++;
-  }
-}
 
 
-
-
-
-function initializeGoogleMap(i, d) {
-  
+function initializeGoogleMap(i, currentMarketObject, clickedObject) {
   
   
   // Remove previous buttons
@@ -354,54 +335,9 @@ function initializeGoogleMap(i, d) {
                                             .attr("id", "google_map_"+i)
                                             .attr("class", "google_map");
   
-  
-  // Setup div for filter
-  var google_map_filter_div = google_map_container.append("div")
-                                            .attr("id", "google_map_filter_"+i)
-                                            .attr("class", "geoToolTip");
-  
-  
-  
-  // Setup filter area
-  var filter_area_div = google_map_filter_div.append("div").attr("id", "filter_area_div");
-  
-  
-  // Setup filter area background    
-  var filter_area_svg = filter_area_div.append("svg")
-                                        .attr("class", "filter_area_svg");
-  
-  
-  // Add group for backgrounds
-  filter_area_svg.append("g")
-                  .append("rect")
-                    .attr("id", "filter_background_svg")
-                    .style("fill", FILTER_BACKGROUND)
-                    .style("stroke", "black")
-                    .style("opacity", 0.75);
-  
-  
-  
-  
-  // Setup div for dropdown
-  filter_area_div.append("div")
-                    .attr("id", "dropdown_1_div");
-  
-  
-  
-  // Setup Apply filter button in filter area
-  filter_area_div.append("div")
-                    .attr("id", "filter_apply_button_div")
-                  .append("input")
-                    .attr("id", "filter_button_2")
-                    .attr("type", "button")
-                    .attr("value", "Apply Filter");
-  
-  // Setup Filters
-  setupFilters(google_map_filter_div);
-  
 
-  // Load the station data
-  createGoogleMap(google_map_div, d, i);
+  // Load the building data
+  createGoogleMap(google_map_div, currentMarketObject, i);
   
   
   
@@ -479,60 +415,45 @@ function initializeGoogleMap(i, d) {
   
   
   
+  var filter_opts = Object.keys(top_x_filter_options);
+
+  
+  // Initialize at top n at default
+  TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
+  
+  // Create Pulldown menu to filter google map
+  map_button_div.append("select")
+                  .attr("id", "filter_pulldown_1")
+                  .attr("class", "google_map_buttons")
+                  .style("opacity", 0)
+                  .on("change", function() {
+                    var key = d3.select(this).property("value");
+                    TOP_N_BUILDINGS = top_x_filter_options[key];
+                  })
+                  .selectAll("option")
+                  .data(filter_opts).enter()
+                .append("option")
+                  .text(function (d, i) { return d; });
   
   
-  // Add filter minimize button
-  map_button_div.append("input").data([i])
-    .attr("id", "min_max_filter_button")
-    .attr("class", "google_map_buttons")
-    .attr("type", "button")
-    .attr("value", "Hide Filter")
-    .style("opacity", 0)
-    .on("click", function(d) {
-      if (map_filter_minimized) {
-        
-        // Set flag
-        map_filter_minimized = false;
-        
-        // Reopen map
-        d3.select("#google_map_filter_"+d).style("visibility", "visible");
-        
-        // change value to -
-        d3.select(this).property("value", "Hide Filter");
-      }
-      else {
-        
-        // Set flag
-        map_filter_minimized = true;
-        
-        // Minimize map
-        d3.select("#google_map_filter_"+d).style("visibility", "hidden");
-        
-        // change value to +
-        d3.select(this).property("value", "Show Filter");
-      }
-    });
-  
-  
-  
+   
   // Add button goes back to city view
   map_button_div.append("input").data([i])
-    .attr("id", "city_view_button")
+    .attr("id", "apply_filter_dropdown")
     .attr("class", "google_map_buttons")
     .attr("type", "button")
-    .attr("value", "City View")
+    .attr("value", "Apply")
     .style("opacity", 0)
-    .on("click", function(d) {
-    
-    
-      createGoogleMap(google_map_div, d, i);
+    .on("click", function() {
+        refreshGoogleMap(currentMarketObject);
     });
   
- 
+  
   
   // Set transition on map container
   d3.selectAll(".google_map_buttons").transition().duration(750).style("opacity", 1);
   google_map_container.transition().delay(200).duration(1000).style("opacity", 1);
+  
 }
 
 
@@ -551,10 +472,7 @@ function checkBuilding(data, building) {
 
 
 
-
-
-
-function initializeGoogleMaps(d, object_this) {
+function preInitializeGoogleMaps(currentMarketObject, clickedObject) {
   
   // CHECK IF MAP ALREADY ON - IF YES, CLOSE
   if (google_map_on) {
@@ -568,11 +486,10 @@ function initializeGoogleMaps(d, object_this) {
 
     selected_city = {};
     
-    
     // CHECK IF OTHER MAP OPEN - CLOSE IT, OPEN NEW ONE
-    if (current_city != d.city) {
+    if (current_city != currentMarketObject.city) {
       setTimeout(function() {
-        cityClickPrimer(d, object_this);  
+        cityClickPrimer(currentMarketObject, clickedObject);  
       }, 1000)
     }
     
@@ -586,17 +503,20 @@ function initializeGoogleMaps(d, object_this) {
   // OPEN MAP
   else {
     // Open map
-    initializeGoogleMap(2, d);
+    initializeGoogleMap(2, currentMarketObject, clickedObject);
 
     // Set city to selected color
-    object_this.style.stroke = "black";
-    object_this.style.fill = city_color_selected;
+    clickedObject.style.stroke = "black";
+    clickedObject.style.fill = city_color_selected;
 
     // Set current city
-    selected_city[d.city] = object_this;
+    selected_city[currentMarketObject.city] = clickedObject;
 
     // Turn on text
-    d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");
+    d3.select("#city_text_"+currentMarketObject.city)
+        .transition().duration(750)
+        .style("opacity", 1)
+        .style("display", "inline");
     
     // Add filter information
     addFilterInfo();

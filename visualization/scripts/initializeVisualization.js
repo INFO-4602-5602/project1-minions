@@ -16,7 +16,7 @@
 // loading spinners
 //   http://stackoverflow.com/questions/15485127/d3-js-adding-a-loading-notification-during-ajax-request
 
-var tool_tip_minimized, map_filter_minimized;
+var tool_tip_minimized;
 var cities_off = false;
 
 
@@ -104,33 +104,33 @@ function addFilterInfo(i=1) {
 
 
 
-function initializeBuildingVisualizations(d, object_this) {
+function initializeBuildingVisualizations(currentMarketObject, clickedObject) {
   // Setup the building GOOGLE MAP
-  initializeGoogleMaps(d, object_this);  
+  preInitializeGoogleMaps(currentMarketObject, clickedObject);  
   
   // Setup the building HISTOGRAM
-  initializeBuildingHistogram(d, object_this);
+  initializeBuildingHistogram(currentMarketObject, clickedObject);
 }
 
 
 
 
-function cityClickPrimer(d, object_this) {
+function cityClickPrimer(currentMarketObject, clickedObject) {
   
   // Check if market info previously queried and already stored:
-  var city_data_previously_queried = checkCityData(d);
+  var city_data_previously_queried = checkCityData(currentMarketObject);
   
   
   // Set color of city
  // Set city to selected color
   var city_stroke = (google_map_on) ? "none" : "black";
   var city_fill = (google_map_on) ? city_color_unselected : city_color_selected;
-  object_this.style.stroke = city_stroke;
-  object_this.style.fill = city_fill;
+  clickedObject.style.stroke = city_stroke;
+  clickedObject.style.fill = city_fill;
   
   
   if (!city_data_previously_queried) {
-    QUERIED_DATA[d.city] = undefined;
+    QUERIED_DATA[currentMarketObject.city] = undefined;
     
     
     // Flag system as busy
@@ -145,16 +145,16 @@ function cityClickPrimer(d, object_this) {
     setTimeout(function() {
 
       // Set data
-      QUERIED_DATA[d.city] = TEST_QUERY_DATA[d.city];
+      QUERIED_DATA[currentMarketObject.city] = TEST_QUERY_DATA[currentMarketObject.city];
 
       // Flag system as no longer busy
       system_busy = false;
       
       // Initialize the building visualizations - Google map and Histogram
-      initializeBuildingVisualizations(d, object_this);
+      initializeBuildingVisualizations(currentMarketObject, clickedObject);
       
       // Initialize Market summary
-      initializeMarketSummary(d, object_this);
+      initializeMarketSummary(currentMarketObject, clickedObject);
       
       // Stop spinner
       spinner.stop();
@@ -164,10 +164,10 @@ function cityClickPrimer(d, object_this) {
   }
   else {
     // Initialize the building visualizations - Google map and Histogram
-    initializeBuildingVisualizations(d, object_this);
+    initializeBuildingVisualizations(currentMarketObject, clickedObject);
     
     // Initialize Market summary
-    initializeMarketSummary(d, object_this);
+    initializeMarketSummary(currentMarketObject, clickedObject);
   }
   
   
@@ -544,19 +544,19 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
 
 
 
-function setupBackButton(vis_container_id) {
-  var container = d3.select("#vis_"+vis_container_id+"_button_div");
-  
-  // Create back button
-  container.append("input").data([vis_container_id])
-            .attr("type", "button")
-            .attr("value", "Back")
-            .attr("id", function (d) {
-              return "back_button_"+d;
-            })
-            .on("click", function(d) { 
-              MoveBackToMap(d);
-            });
-  
-}
+//function setupBackButton(vis_container_id) {
+//  var container = d3.select("#vis_"+vis_container_id+"_button_div");
+//  
+//  // Create back button
+//  container.append("input").data([vis_container_id])
+//            .attr("type", "button")
+//            .attr("value", "Back")
+//            .attr("id", function (d) {
+//              return "back_button_"+d;
+//            })
+//            .on("click", function(d) { 
+//              MoveBackToMap(d);
+//            });
+//  
+//}
 
