@@ -136,8 +136,6 @@ function cityClickPrimer(d, object_this) {
     // Flag system as busy
     system_busy = true;
 
-    // Update create_vis_button button
-//    d3.select("#create_vis_button").attr("value", "Collecting Data...");
 
     // Set spinner target
     var target = document.getElementById("loading_data_div");
@@ -146,10 +144,6 @@ function cityClickPrimer(d, object_this) {
     // AJAX CITY QUERY WILL GO HERE
     setTimeout(function() {
 
-      // Stop spinner
-      spinner.stop();
-
-      
       // Set data
       QUERIED_DATA[d.city] = TEST_QUERY_DATA[d.city];
 
@@ -159,12 +153,21 @@ function cityClickPrimer(d, object_this) {
       // Initialize the building visualizations - Google map and Histogram
       initializeBuildingVisualizations(d, object_this);
       
+      // Initialize Market summary
+      initializeMarketSummary(d, object_this);
+      
+      // Stop spinner
+      spinner.stop();
+      
     }, data_load_sim_time); 
     
   }
   else {
     // Initialize the building visualizations - Google map and Histogram
     initializeBuildingVisualizations(d, object_this);
+    
+    // Initialize Market summary
+    initializeMarketSummary(d, object_this);
   }
   
   
@@ -175,7 +178,6 @@ function cityMouseOver(d) {
   if (cities_off) {
     return;
   }
-
   city_mark = d3.select("#city_"+d.city);
   city_mark.transition()        
      .duration(750)       
@@ -395,8 +397,11 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
   svg.call(zoom);
                 
                 
-  var g = svg.append("g").attr("id", "svg_g_"+vis_container_id);
-  
+  var g = svg.append("g")
+              .attr("id", "svg_g_"+vis_container_id)
+              .attr("class", "initial_map")
+              .style("opacity", 0);
+
   
   function clicked(d) {
     
@@ -446,7 +451,7 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
     if (d3.event.defaultPrevented) d3.event.stopPropagation();
   }
 
-  // Load in my states data!
+  // Load in markets data
   d3.csv("data/markets.csv", function(error, data) {
     if (error) throw error;
     
@@ -529,6 +534,9 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
        
     });
   });
+  
+  // Transition in the map
+  g.transition().duration(1500).style("opacity", 1.0);
   
 }
 
