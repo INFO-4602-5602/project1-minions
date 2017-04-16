@@ -4,9 +4,7 @@ var INIT_QUERY_DATA = { "Dallas" : 5000,
                       };
 
 
-var MARKET_TO_STATE = { "Dallas" : "Texas",
-                        "Denver" : "Colorado",
-                        "Atlanta" : "Georgia"};
+
 
 
 

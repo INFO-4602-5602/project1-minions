@@ -17,6 +17,11 @@ var data_load_sim_time = 1000;
 
 
 
+var MARKET_TO_STATE = { "Dallas" : "Texas",
+                        "Denver" : "Colorado",
+                        "Atlanta" : "Georgia"};
+
+
 function addRemoveSetupButtons(vis_num=1) {
   
   // Clear the create new visualization button
@@ -164,9 +169,6 @@ function initializeMainVisData() {
   // AJAX WILL GO HERE
   setTimeout(function() {
     
-    // Stop spinner
-    spinner.stop();
-    
     // Add reset button
     addRemoveSetupButtons();
     
@@ -175,6 +177,10 @@ function initializeMainVisData() {
     
     // Flag system as no longer busy
     system_busy = false;
+    
+    // Stop spinner
+    spinner.stop();
+    
   }, data_load_sim_time); 
 }
 
@@ -223,10 +229,8 @@ function initialize() {
   d3.select("body").append("div").attr("id", "loading_data_div");
   
   
-  
   // Create 6 containers
   for (var vis_num=1; vis_num < VIS_CONTAINER_NUM; vis_num++) {
-    
     setupVisContainer(vis_num);
   }
   

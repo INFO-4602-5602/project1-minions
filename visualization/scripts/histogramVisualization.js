@@ -13,7 +13,7 @@ function initializePullDownMenu(d) {
   var pulldown_1 = d3.select("#vis_3_button_div");
   
   
-  buildingHistogramOptions = ["Build Cost", "Profit", "Net Proximity"];
+  var buildingHistogramOptions = ["Build Cost", "Profit", "Net proximity"];
   
   // Set default histogram selection
   current_building_histogram_selection = buildingHistogramOptions[0];
@@ -39,10 +39,58 @@ function redrawHistogram(d) {
 }
 
 
-function makeHistogram(buildings) {
+function makeHistogram(histo_data) {
+  var data = histo_data;
+
+  var formatCount = d3.format(",.0f");
+
+  var svg = d3.select("#histogram_group"),
+      margin = {top: 10, right: 30, bottom: 30, left: 30},
+      width = +svg.attr("width") - margin.left - margin.right,
+      height = +svg.attr("height") - margin.top - margin.bottom,
+      g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var x = d3.scaleLinear()
+      .rangeRound([0, width]);
+
+  var bins = d3.histogram()
+      .domain(x.domain())
+      .thresholds(x.ticks(20))
+      (data);
+
+  var y = d3.scaleLinear()
+      .domain([0, d3.max(bins, function(d) { return d.length; })])
+      .range([height, 0]);
+
+  var bar = g.selectAll(".bar")
+    .data(bins)
+    .enter().append("g")
+      .attr("class", "bar")
+      .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+
+  bar.append("rect")
+      .attr("x", 1)
+      .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+      .attr("height", function(d) { return height - y(d.length); });
+
+  bar.append("text")
+      .attr("dy", ".75em")
+      .attr("y", 6)
+      .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return formatCount(d.length); });
+
+  g.append("g")
+      .attr("class", "axis axis--x")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
   
-  
-  // Get data
+}
+
+
+
+function getHistogramData(buildings) {
   var histo_data = []
   for (var i=0; i < buildings.length; i++) {
     var current_building = buildings[i];
@@ -51,59 +99,17 @@ function makeHistogram(buildings) {
     histo_data.push(current_data);
   }
   
-  console.log(histo_data);
-  
-  // Set group
-  var histo_group = d3.select("#histogram_group");
-  
-  var margin = {top: 10, right: 30, bottom: 30, left: 30};
-  var histo_width = HISTOGRAM_CONTAINER_WIDTH;
-  var histo_height = HISTOGRAM_CONTAINER_HEIGHT;
-  
-  
-  // set the ranges
-  var x = d3.scaleLinear()
-              .rangeRound([0, histo_width]);
-  
-  var bins = d3.histogram()
-                .domain(x.domain())
-                .thresholds(x.ticks(10))
-                (histo_data);
-  
-  var y = d3.scaleLinear()
-              .domain([0, d3.max(bins, function(d) { return d.length; })])
-              .range([histo_height, 0]);
-
-  
-  
-  var bar = histo_group.selectAll("g.bar")
-                          .data(bins).enter()
-                          .append("g")
-                          .attr("class", "bar")
-                          .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
-                            
-  bar.append("rect")
-    .attr("x", 1)
-    .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-//    .attr("height", function(d) { return histo_height - y(d.length); });
-    .attr("height", function(d) {
-      console.log(d);
-      console.log(d.length);
-      console.log(y(d.length));
-      return histo_height; 
-    });
-
+  return histo_data;
 }
-
-
 
 function initializeHistogram(d) {
   
+  // Declar the histogram group
   var histo_group = d3.select("#vis_3_svg_container")
                         .append("g")
                         .attr("class", "histogram")
-              .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
-              .attr("width", HISTOGRAM_CONTAINER_WIDTH)
+                        .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
+                        .attr("width", HISTOGRAM_CONTAINER_WIDTH)
                         .attr("id", "histogram_group")
                         .attr("transform", "translate(100, 100)");;
   
@@ -116,7 +122,7 @@ function initializeHistogram(d) {
             .style("font-size", "40px")
             .style("opacity", 0)
             .text(function() {
-              return "Current Market: " + d.city;
+              return "Market: " + d.city;
             });
   
   
@@ -127,13 +133,17 @@ function initializeHistogram(d) {
               .attr("width", HISTOGRAM_CONTAINER_WIDTH)
               .style("fill", "white")
               .style("stroke", "black")
-              .style("opacity", 0)
+              .style("opacity", 0);
   
- 
+  
+  // Select correct city data from the queried data
+  var buildings = QUERIED_DATA[d.city];
+  
+  // Get data array from buildings object
+  var histo_data = getHistogramData(buildings);
   
   // Populate histogram with data
-  var buildings = QUERIED_DATA[d.city];
-  makeHistogram(buildings);
+  makeHistogram(histo_data);
   
   // Transition - fade it all in
   d3.selectAll(".histogram")
