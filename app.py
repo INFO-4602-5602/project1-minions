@@ -3,8 +3,8 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template, jsonify
-from models import db_session, Building, Accounts, BuildingSchema2, BuildingSchema, AccountSchema, SitesSchema, CPQSchema, \
-    OpportunitySchema, ServiceSchema
+from models import db_session, Building, Accounts, Sites, BuildingSchema2, BuildingSchema, AccountSchema,\
+    AccountSchema2, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema
 import csv
 import os
 from re import sub
@@ -54,7 +54,7 @@ def building_profits(market):
                 else:
                     b_json['profit'] = c.x36_npv_list
             building_profits_json.append(b_json)
-        except :
+        except:
             print "Unexpected Exception occurred while building profits json"
 
     return jsonify(result=building_profits_json)
@@ -62,20 +62,28 @@ def building_profits(market):
 
 @app.route('/account_profits/<market>')
 def account_profits(market):
-    result = Building().query.filter(Building.market == market) \
-        .filter(Building.on_zayo_network_status == "Not on Zayo Network")\
-        .all()
-    accounts_profits_json = {}
+    result = Accounts().query.join(Sites, Accounts.account_id == Sites.account_id).join(Building, Building.building_id == Sites.building_id).filter(Building.market == market).filter(Building.on_zayo_network_status == 'Not on Zayo Network').all()
+    acs = AccountSchema2()
+    accounts_profits_json = []
 
-    for r in result:
-        cpqs_building = r.cpqs
-        for c in cpqs_building:
-            if c.account_id in accounts_profits_json:
-                accounts_profits_json[c.account_id] += c.x36_npv_list
-            else:
-                accounts_profits_json[c.account_id] = c.x36_npv_list
+    for account in result:
+        try:
+            acc_json = acs.dump(account).data
+            acc_json[u'profit'] = 0
+            acc_json[u'building_list'] = {}
+            for site in account.sites:
+                acc_json['building_list'][site.building.building_id] = str(site.building.latitude)+","+str(site.building.longitude)
+                if len(site.building.cpqs) > 0:
+                    for cpq in site.building.cpqs:
+                        if cpq.account_id in acc_json:
+                            acc_json['profit'] += cpq.x36_npv_list
+                        else:
+                            acc_json['profit'] = cpq.x36_npv_list
+            accounts_profits_json.append(acc_json)
+        except:
+            print "Unexpected Exception occurred while building Accounts json"
 
-    return jsonify(accounts_profits_json)
+    return jsonify(result=accounts_profits_json)
 
 
 @app.route('/market_profits')
