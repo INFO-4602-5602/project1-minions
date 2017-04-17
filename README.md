@@ -39,7 +39,7 @@ More information is provided to the user for any selected market by a mouse-clic
 <h2>The Team:</h2> 
 We had several brainstorming and working sessions. In general, we were all involved in the project extended to the following:
 
-* **Michael Iuzzolino**: D3 info visualizations, interface design and Google Maps api interface 
+* **Michael Iuzzolino**: Front-end development, D3 info visualizations and interactive interface design, Google Maps API integration.
 
 * **Shirly Montero Quesada**: Readme, interface conceptual design and review
 
