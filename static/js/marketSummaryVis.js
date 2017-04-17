@@ -59,10 +59,10 @@ function calculateSummaryStats(d) {
   for (var i=0; i < num_buildings; i++) {
     var current_building = buildings[i];
     // Average network prox  
-    average_network_prox += current_building["net prox"] / num_buildings;
+    average_network_prox += current_building["network_proximity"] / num_buildings;
     
     // Average build cost
-    average_build_cost += current_building["build cost"] / num_buildings;
+    average_build_cost += current_building["estimated_build_cost"] / num_buildings;
     
     // Total profit
     total_profit += current_building["profit"];
