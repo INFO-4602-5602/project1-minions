@@ -188,24 +188,9 @@ function initializeHistogram(d) {
                         .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
                         .attr("width", HISTOGRAM_CONTAINER_WIDTH)
                         .attr("id", "histogram_group")
-                        .attr("transform", "translate(100, 100)");;
-  
- 
-  
-  
-  // Test background
-  histo_group.append("rect")
-              .attr("class", "histogram")
-              .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
-              .attr("width", HISTOGRAM_CONTAINER_WIDTH)
-              .style("fill", "white")
-              .style("stroke", "black")
-              .style("opacity", 0);
-  
-  
-  
-  // ------------------------------------------------
-  
+                        .attr("transform", "translate(50, 100)");
+
+
   
   // Select correct city data from the queried data
   var buildings = QUERIED_DATA[d.city];
