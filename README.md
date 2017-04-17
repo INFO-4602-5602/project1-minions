@@ -29,16 +29,17 @@ Via a drop down menu the user can filter the view of the buildings that satisfy 
 <li>Attributes Histogram. As the name describes, this visualization uses histograms to show the distribution[9] of the values for an user selected attribute. The data used for the histogram has been reduced in the previous visualization Most Profitable Buildings Map. Once more, the selection of the attribute happens via a dropdown menu.</li>
 
 <h2>The Team:</h2> 
-We had several brainstorming and working sessions. In general, we were all involved in the project extended to the following: 
-Michael Iuzzolino: D3 designs 
+We had several brainstorming and working sessions. In general, we were all involved in the project extended to the following:
 
-Shirly Montero Quesada: Readme
+* Michael Iuzzolino: D3 designs 
 
-Athithyaa Panchapakesan Rajeswari: Database/Server/Designs on Server 
+* Shirly Montero Quesada: Readme
 
-Santhanakrishnan Ramani: Database/Server/Designs on Server
+* Athithyaa Panchapakesan Rajeswari: Database/Server/Designs on Server 
 
-Nicholas Schardt:Proof read
+* Santhanakrishnan Ramani: Database/Server/Designs on Server
+
+* Nicholas Schardt:Proof read
 
 <h2>How to run the project?:</h2>
 The project is available on AWS via the link:
