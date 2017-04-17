@@ -26,7 +26,7 @@ var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
 
 
-var TOP_N_BUILDINGS_DEFAULT = 3;
+var TOP_N_BUILDINGS_DEFAULT = 10;
 var TOP_N_BUILDINGS;
 
 var infowindow;
@@ -36,12 +36,12 @@ var BUILDING_ID_TO_WINDOW = {};
 
 
 // Add top X filter
-  var top_x_filter_options = {"Top 1" : 1,
-                              "Top 2" : 2,
-                              "Top 3" : 3,
-                              "Top 4" : 4,
+  var top_x_filter_options = {"Top 3" : 3,
                               "Top 5" : 5,
-                              "Top 6" : 6};
+                              "Top 10" : 10,
+                              "Top 25" : 25,
+                              "Top 50" : 50,
+                              "Top 100" : 100};
 
 
 
@@ -93,7 +93,7 @@ function sortByFilter(CURRENT_BUILDINGS, N=5) {
   for (var bldg_index=0; bldg_index < CURRENT_BUILDINGS.length; bldg_index++) {
     var current_bldg = CURRENT_BUILDINGS[bldg_index];
     
-    var bldg_id = current_bldg["building-id"];
+    var bldg_id = current_bldg["building_id"];
     var filter_attr = current_bldg[filter_key];
     sortable.push([bldg_id, filter_attr]);
   }
@@ -142,15 +142,16 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     if (!found_building) {
       continue;
     }
-    
   
+    
     // Define city parameters
     
-    // Get building lat, lon and store it into myLatlng
-    var building_lat = building_data.lat;
-    var building_lon = building_data.lon;
     
-    var myLatlng = {"lng" : building_lon, "lat" : building_lat};
+    // Get building lat, lon and store it into myLatlng
+    var building_lat = building_data.latitude;
+    var building_lon = building_data.longitude;
+    
+    var myLatlng = {"lng" : building_lat, "lat" : building_lon};
     
     
     // Add the circle for this city to the map.

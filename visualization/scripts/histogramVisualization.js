@@ -203,30 +203,19 @@ function initializeHistogram(d) {
               .style("opacity", 0);
   
   
-  // ------------------------------------------------
-  //                FOR TESTING 
-  // ------------------------------------------------
-  denver_buildings = TEST_HISTO;
   
-  console.log("Denver buildings!");
-  console.log(denver_buildings);
-  
-  getHistogramData(denver_buildings);
-
-  
-  plotBarChart("xLbl", "yLbl");
   // ------------------------------------------------
   
   
-//  // Select correct city data from the queried data
-//  var buildings = QUERIED_DATA[d.city];
-//  
-//  // Get data array from buildings object
-//  var histo_data = getHistogramData(buildings);
+  // Select correct city data from the queried data
+  var buildings = QUERIED_DATA[d.city];
+  
+  // Get data array from buildings object
+  var histo_data = getHistogramData(buildings);
   
   
-//  // Populate histogram with data
-//  plotBarChart("xLbl", "yLbl", histo_data);
+  // Populate histogram with data
+  plotBarChart("Categories", "Count");
   
   
   
