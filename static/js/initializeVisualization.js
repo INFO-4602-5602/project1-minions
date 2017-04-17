@@ -342,10 +342,7 @@ function mapCityToState(g, projection) {
 
 
 
-
-
-
-function initializeMainVisualization(profits_data, vis_container_id=1, scale=400) {
+function initializeMainVisualization(profits_data, vis_container_id=1, scale=800) {
 
 
     var active = d3.select(null);
@@ -357,7 +354,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=400
 
     // D3 Projection
     var projection = d3.geoAlbersUsa()
-        .translate([(width-200)/2, height/2])    // translate to center of screen
+        .translate([width/2, height/2])    // translate to center of screen
         .scale([scale]);          // scale things down so see entire US
 
 
@@ -376,12 +373,12 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=400
 
     var profit_min = Math.min.apply( null, profits );
     var profit_max = Math.max.apply( null, profits );
-    var pivot_value = profit_max*0.8;
+    var pivot_value = profit_max*0.5;
 
 
     var color = d3.scaleLinear()
         .domain([profit_min, pivot_value, profit_max])
-        .range(["#ffcccc", "#66ff66"]);
+        .range(["#00cc00", "#66ff66"]);
 
 
 
@@ -491,7 +488,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=400
                     return "state_path_" + d.properties.name;
                 })
                 .attr("class", "feature")
-                .on("click", clicked)
+                //.on("click", clicked)
                 .on("mouseover", function(d) {
                     d3.select(this).transition()
                         .duration(200)
