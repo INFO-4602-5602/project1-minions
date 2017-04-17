@@ -148,7 +148,7 @@ function setupVisContainer(vis_num) {
 
   
   // Create vis svg container
-  if (vis_num == 2) { return; }
+//  if (vis_num == 2) { return; }
   createSVGContainer(vis_num);
   
 }
