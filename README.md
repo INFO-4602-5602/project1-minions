@@ -31,9 +31,13 @@ Via a drop down menu the user can filter the view of the buildings that satisfy 
 <h2>The Team:</h2> 
 We had several brainstorming and working sessions. In general, we were all involved in the project extended to the following: 
 Michael Iuzzolino: D3 designs 
+
 Shirly Montero Quesada: Readme
+
 Athithyaa Panchapakesan Rajeswari: Database/Server/Designs on Server 
+
 Santhanakrishnan Ramani: Database/Server/Designs on Server
+
 Nicholas Schardt:Proof read
 
 <h2>How to run the project?:</h2>
