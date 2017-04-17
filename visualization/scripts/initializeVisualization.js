@@ -160,7 +160,6 @@ function cityClickPrimer(currentMarketObject, clickedObject) {
       spinner.stop();
       
     }, data_load_sim_time); 
-    
   }
   else {
     // Initialize the building visualizations - Google map and Histogram
@@ -387,6 +386,7 @@ function initializeMainVisualization(vis_container_id=1, scale=1000) {
                   .range(["#ffcccc", "#66ff66"]);
 
   
+
   
   // Create SVG element and append map to the SVG
   var svg = d3.select("#vis_"+vis_container_id+"_svg_container")

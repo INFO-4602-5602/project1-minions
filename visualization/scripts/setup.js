@@ -146,7 +146,9 @@ function setupVisContainer(vis_num) {
   // SVG DIV
     var vis_svg_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
 
+  
   // Create vis svg container
+  if (vis_num == 2) { return; }
   createSVGContainer(vis_num);
   
 }

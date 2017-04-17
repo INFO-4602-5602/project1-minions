@@ -112,6 +112,8 @@ function sortByFilter(CURRENT_BUILDINGS, N=5) {
   return sorted_building_ids;
 }
 
+
+
 function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
   
   // Set current market 
@@ -123,11 +125,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
   // Sort the current buildings by filter
   var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
   
-  
   for (var building in CURRENT_BUILDINGS) {
     
     var building_data = CURRENT_BUILDINGS[building];
-    var building_id = building_data["building-id"];
+    var building_id = building_data["building_id"];
     
     // Filter!
     var found_building = false;
@@ -165,9 +166,9 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
       radius: 2500,
       
       // Custom attributes
-      building_id: building_data["building-id"],
-      build_cost: building_data["build cost"],
-      net_proximity: building_data["net prox"],
+      building_id: building_data["building_id"],
+      build_cost: building_data["estimated_build_cost"],
+      net_proximity: building_data["network_proximity"],
       profit: building_data["profit"],
       
     });
