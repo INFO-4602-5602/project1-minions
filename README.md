@@ -1,75 +1,53 @@
 # Project1
-<h2>Project 1:</h2>
-Due 4.16.2017 by 11:59pm through GitHub Classroom 
-Projects may be submitted up to 3 days late, with a 10% penalty per day.
 
-<h2>Overview: </h2>
-You've been provided consumer data by Zayo. They simply want to understand what's going on in all of this data! Your goal is to create a series of interactive visualizations that can be used to explore different aspects of this data.
+<h2>The Outset:</h2>
+We were provided consumer data by Zayo. Our goal is to create a series of interactive visualizations that can be used to explore different aspects of this data.
 
-This repository contains five datasets that reflect a subset of this data. You will use a combination of these datasets to build these tools. All code created as part of this project will remain yours to share as you see fit. None will be provided to Zayo without your express consent.
+<h2>The Data: </h2>
+The data received was in the form of a .xlsx workbook with eight worksheets, including the KEY. The other seven are Buildings, Accounts, Sites, CPQs, Opportunities, Services, and Markets, for a total of 41 attributes. We used the relations of some of these attributes to build a database. 
+Missing data. In some circumstances, when indispensible data was missing, the entry was not included in the database —e.g. Building ID, X36 NPV List. In the case of Network Proximity, data was imputed using the smallest approximated value calculated by adding the distance to the closest buildings that had values and its Network Proximity.
+//TODO Details of DB building process
+We have several end points on the server to access the data. These are:
+/market_profits: 
+/building_profits: 
 
-<h2>Minimum Requirements:</h2> 
-Your project must:
-<ul>
-<li> Include a README.md file that outlines:
-  <ul>
-  <li>Information about your visualizations and what they show. Include information about interactions as appropriate.</li>
-  <li>Your design process (e.g., how did you go about designing, building, and refining your system? Why did you choose these representations?)</li>
-  <li>Your team roles for each individual</li>
-  <li>How to run your project</li></ul></li>
-<li>Include at least three unique visualizations:
-  <ul>
-  <li>One visualization must be spatial (e.g., a map or plot that leverages geospatial information in some way)</li>
-  <li>One visualization must be non-spatial (e.g., a timeline, histogram, etc.)</li>
-  <li>Each visualization must be interactive</li>
-  <li>Your set of three visualizations should contain at least one data attribute from two different sheets</li>
-  <li>Your set of three visualizations should visualize at least five data attributes total</li></ul></li>
-<li>Be able to work with any dataset of this format (e.g., the numbers are interchangable but the columns and document titles are fixed).</li>
-</ul>
-
-<h2>Above and Beyond:</h2> 
-The above requirements are the minimum for a passing grade on this project. Some ideas to improve your project include:<ul>
-  <li>Dashboarding: Show all three visualizations as part of the same screen.</li>
-<li>Added Visualizations: Provide more than three visualizations</li>
-<li>Dynamic Queries: Including UI widgets that allow you to change the current data field</li>
-<li>Missing Data: Not all rows have data for all columns. Design ways of handling missing data intelligently.</li>
-<li>Coordinated Views: Have two or more visualizations that interact with one another as you move through the data.</li>
-<li>Overview+Detail: Provide a pair of views that allow viewers to retain context as they navigate your data.</li>
-<li>Style: Keep the style consistent across all your views, with an eye towards intelligently applying visual design.</li></ul>
-
-<h2>Platforms:</h2> 
-You can use any development platform you'd like so long as it is not proprietary (exception: MatLab as we have a University License). Please do not use WYSIWYG tools for your final submission (you're welcome to do so for prototyping). Your project readme should include step-by-step instructions on how to run your projects and it should run without me having to modify the code. You are welcome to use different platforms for each visualization.
-
-Some platforms to look at include:
-<ul>
-<li>D3</li>
-<li>R with ggplot</li>
-<li>WebGL or Three.js</li>
-<li>Processing or ProcessingJS</li>
-<li>Google Maps API</li>
-<li>Open Street Map API</li>
-</ul>
-
-<h2>Submissions:</h2>
-All submissions must be made through GitHub with a timestamp by 11:59pm on 4.14. Your submission files should include:
-<ul>
-<li>Your README</li>
-<li>Your code</li>
-</ul>
-
-Each member of the team should also send me a project post-mortem through email documenting the following:
-* What you worked on in the project
-* What your teammates worked on in the project
-* How you would rate your performance and why
-* How you would rate each teammates' performance and why
-
-These documents will be kept confidential and will factor into project grades. If you feel all of the team worked hard and performed well, please don't hesitate to tell me that (no curving is necessary on performance reviews :-))! Also, please keep in mind that different team members have different skillsets, roles, and experiences.
-
-<h2>Grading: </h2>
-The project will be scored out of 100 points total. Your project will be graded on four different criteria:
+<h2>The Visualizations:</h2> 
+These work encompasses four visualizations:
 <ol>
-<li> Creativity</li>
-<li> Technical execution</li>
-<li> Design (both aesthetic and your visualization choices)</li>
-<li> Project Post-Mortems</li>
+<li>Overview Choropleth Map[1]. The user can select[2] a market and view the total profit of sites not on Zayo Network for that Market. In addition, the user can view a summary[3] other aggregated values for that market as a list.</li> 
+<li>Most Profitable Buildings Map. Overlaid on a google map of the selected market in the Choropleth Map, the user can view the buildings in that city that are not on Zayo Network. The user can filter[4] the buildings to view according to different criteria.</li>
+<li>Attributes Histogram. Based on the data reduction from Most Profitable Buildings Map, the user can select an attribute from a menu to visualize its distribution[5] as a histogram.</li>
 </ol>
+
+<h2>The Designs:</h2> 
+Overview Choropleth Map. This visualization shows a map of the United States of America with the state divisions. For the most part, the map is gray, with green highlighting for Colorado, Georgia, and Texas. These three are the states of each of the markets of interest Denver, Atlanta, and Dallas, respectively, which are represented with a circle on their geolocation. The color highlighting of the states (contrast with a binary color hue) combined with the spatial regions help us to facilitate the identification[6] of the three markets of interest. 
+The color saturation is used here as a magnitud[7] channel to represents the total profit per Market. The total profit is calculated by aggregating  the values of attribute X36 NPV List for all of the sites that are not on Zayo Network, but located within the specific market. We used an intuitive direct proportional relationship, that is, the higher the saturation, the higher is the total profit. Another marker such as position on a common scale would be more effective in the representation. However, to keep an efficient and simple design with the underlying map, the actual number is render with a mouse-over action.
+Typically in choropleth maps, normalized data is preferred to raw data to overcome a common interpretation bias –e.g. when presenting relations that include population.[8] However, we chose total profit –as opposed to a profit density- based on the premise that X36 NPV List reflects already all overhead related to management of the sites –as understood from our discussion in class with a Zayo representative. In a given market, if the premise is correct, more accounts for the same profit would be beneficial for the sustainability of the business. For example, in one market two accounts render the same profit as 20 accounts in another market. If one account leaves, there is a higher impact in one of the markets than in the other. Independent of the business strategy for client proliferation, the attribute total profit is relevant to towards the main goal. 
+More information is provided to the user for any selected market by a mouse-click (circles are playfully highlighted by changing size). The overview list contains aggregated values of the number of buildings, the number of Sites, the number of Accounts, the top of Product Group, the average Network Proximity, the average Estimated Build Cost, the Industry type, and the Vertical. 
+Most Profitable Buildings Map. This is a simple visualization of the geographical location of the buildings in a selected market. The selection occurs in the previous visualization, but this map is rendered on a different frame (div). 
+Via a drop down menu the user can filter the view of the buildings that satisfy different criteria –e.g. top ten, top x percent. We selected a cleaner dropdown menu in opposed to the more cluttering option of labeled buttons.
+Attributes Histogram. As the name describes, this visualization uses histograms to show the distribution[9] of the values for an user selected attribute. The data used for the histogram has been reduced in the previous visualization Most Profitable Buildings Map. Once more, the selection of the attribute happens via a dropdown menu.
+
+<h2>The Team:</h2> 
+We had several brainstorming and working sessions. In general, we were all involved in the project extended to the following: 
+Michael Iuzzolino: D3 designs 
+Shirly Montero Quesada: Readme
+Athithyaa Panchapakesan Rajeswari: Database/Server/Designs on Server 
+Santhanakrishnan Ramani: Database/Server/Designs on Server
+Nicholas Schardt:Proof read
+
+<h2>How to run the project?:</h2>
+The project is available on AWS via the link:
+http://ec2-52-36-208-27.us-west-2.compute.amazonaws.com/
+
+<h2>The References: </h2>
+
+[1] Heer, J., Bostock, M., Ogievetsky, V. (2010) A Tour Through the Visualization Zoo. Communications Of The ACM. p63.
+[2] as defined in Munzner, T. Visualization Analysis & Design. Boca Raton: CRC Press, 2014. p 249.
+[3] Idem 2. p 54
+[4] Idem 2. p 300.
+[5] Idem2. p 57.
+[6] Idem2. p 99.
+[7] Ibid 6.
+[8] Ibid 1.
+[9] Idem2. p 57.The project will be scored out of 100 points total. Your project will be graded on four different criteria:
