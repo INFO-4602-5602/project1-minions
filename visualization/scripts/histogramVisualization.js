@@ -4,7 +4,7 @@
 
 
 
-var HISTOGRAM_CONTAINER_HEIGHT = 500;
+var HISTOGRAM_CONTAINER_HEIGHT = 400;
 var HISTOGRAM_CONTAINER_WIDTH = 800;
 
 
@@ -171,7 +171,6 @@ function plotBarChart(xLbl, yLbl) {
 
 function getHistogramData(buildings) {
   
-  console.log("current_building_histogram_selection: " + current_building_histogram_selection);
   var pre_histo_data = []
   for (var i=0; i < buildings.length; i++) {
     var current_building = buildings[i];
@@ -217,7 +216,7 @@ function initializeHistogram(d) {
                         .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
                         .attr("width", HISTOGRAM_CONTAINER_WIDTH)
                         .attr("id", "histogram_group")
-                        .attr("transform", "translate(100, 100)");;
+                        .attr("transform", "translate(20, 100)");;
   
  
   
