@@ -33,7 +33,7 @@ var infowindow;
 var filter_key = "profit";
 
 var BUILDING_ID_TO_WINDOW = {};
-
+var buildingCircles;
 
 // Add top X filter
   var top_x_filter_options = {"Top 3" : 3,
@@ -125,6 +125,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
   // Sort the current buildings by filter
   var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
   
+  
+  buildingCircles = [];
   for (var building in CURRENT_BUILDINGS) {
     
     var building_data = CURRENT_BUILDINGS[building];
@@ -173,7 +175,7 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
       profit: building_data["profit"],
       
     });
-    
+    buildingCircles.push(buildingCircle);
     
     // Create info window
     
@@ -226,7 +228,11 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
           map.setZoom(15);
           var zoom_level = 15;
           map.setCenter(this.getCenter());
-
+          
+          for (var k=0; k < buildingCircles.length; k++) {
+            console.log(buildingCircles[k]);
+            buildingCircles[k].setRadius(0);
+          }
           this.setRadius(40);
           this.setOptions({fillOpacity : 0.5});
         }
