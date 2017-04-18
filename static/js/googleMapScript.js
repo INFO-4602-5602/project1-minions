@@ -10,24 +10,9 @@ var google_map_on = false;
 var google_map_minimized = false;
 
 var map;
-var draggingGoogleMap = false;
-
-var FILTER_BACKGROUND = "#FEFEFA";
-
-var transition_timeout;
-var current_filter, current_filter_id;
-
-var map_filters = {"On Zayo" : undefined,
-    "Network Proximity" : undefined,
-    "Estimated Build Cost" : undefined};
-
 
 var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
-
-
-var TOP_N_BUILDINGS_DEFAULT = 10;
-var TOP_N_BUILDINGS;
 
 var infowindow;
 var filter_key = "profit";
@@ -35,6 +20,7 @@ var filter_key = "profit";
 var BUILDING_ID_TO_WINDOW = {};
 var buildingCircles;
 
+var filter_building_accounts = ["Buildings", "Accounts"];
 // Add top X filter
 var top_x_filter_options = {"Top 3" : 3,
     "Top 5" : 5,
@@ -54,7 +40,7 @@ function closeGoogleMap() {
 
 
 
-function createGoogleMap(google_map_div, cityObject, vis_container_id) {
+function createGoogleMap(google_map_div, cityObject, number_filter, data, vis_container_id) {
 
     // Set current market, state lat, and state lon
     var state_lat = cityObject.lat;
@@ -71,31 +57,51 @@ function createGoogleMap(google_map_div, cityObject, vis_container_id) {
     });
 
     // Generate buildings
-    generateBuildingsOnMap(google_map_div, cityObject, vis_container_id);
+    generateBAsOnMap(google_map_div, cityObject, vis_container_id, number_filter, data);
 
 }
 
 
-function refreshGoogleMap(cityObject) {
+function refreshGoogleMap(cityObject,number_filter,ba_filter) {
     var google_map_div = d3.select("#google_map_2");
+    var vis_container_id = 4;
     google_map_zoomed = false;
-    createGoogleMap(google_map_div, cityObject, vis_container_id=4);
-    MoveBackToMap(vis_container_id);
-    currentGoogleMapCity = undefined;
+
+    if(ba_filter === "Accounts") {
+
+        var target = document.getElementById("loading_data_div");
+        spinner.spin(target);
+        $.get("/account_profits/" + cityObject.city, function (data) {
+            spinner.stop();
+            system_busy = false;
+            createGoogleMap(google_map_div, cityObject, number_filter, data["result"], vis_container_id);
+            MoveBackToMap(vis_container_id);
+            currentGoogleMapCity = undefined;
+        });
+
+    }else {
+        createGoogleMap(google_map_div, cityObject, number_filter, QUERIED_DATA[cityObject.city], vis_container_id);
+        MoveBackToMap(vis_container_id);
+        currentGoogleMapCity = undefined;
+    }
 }
 
 
 
 
 
-function sortByFilter(CURRENT_BUILDINGS, N=5) {
+function sortByFilter(ba_data, N=5) {
     var sortable = [];
-    for (var bldg_index=0; bldg_index < CURRENT_BUILDINGS.length; bldg_index++) {
-        var current_bldg = CURRENT_BUILDINGS[bldg_index];
-
-        var bldg_id = current_bldg["building_id"];
-        var filter_attr = current_bldg[filter_key];
-        sortable.push([bldg_id, filter_attr]);
+    for (var ba_index=0; ba_index < ba_data.length; ba_index++) {
+        var current_ba = ba_data[ba_index];
+        var ba_id = undefined;
+        if(current_ba["building_id"]) {
+            ba_id = current_ba["building_id"];
+        }else{
+            ba_id = current_ba["account_id"];
+        }
+        var filter_attr = current_ba[filter_key];
+        sortable.push([ba_id, filter_attr]);
     }
 
     sortable.sort(function(a, b) {
@@ -103,33 +109,26 @@ function sortByFilter(CURRENT_BUILDINGS, N=5) {
     });
 
 
-    sorted_building_ids = [];
+    var sorted_ba_ids = [];
     for (var j=0; j < N; j++) {
-        var bldg_id = sortable[j][0];
-        sorted_building_ids.push(bldg_id);
+        sorted_ba_ids.push(sortable[j][0]);
     }
-
-    return sorted_building_ids;
+    return sorted_ba_ids;
 }
 
-
-
-function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
-
-    // Set current market
-    var current_market = d.city;
+function generateBAsOnMap(google_map_div, d, vis_container_id, num_filter, data) {
 
     // USE THE QUERY DATA HERE
-    var CURRENT_BUILDINGS = QUERIED_DATA[current_market];
+    var ba_data = data;
 
     // Sort the current buildings by filter
-    var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
+    var filteredBuildingIds = sortByFilter(ba_data, num_filter);
 
 
     buildingCircles = [];
-    for (var building in CURRENT_BUILDINGS) {
+    for (var ba in ba_data) {
 
-        var building_data = CURRENT_BUILDINGS[building];
+        var building_data = ba_data[ba];
         var building_id = building_data["building_id"];
 
         // Filter!
@@ -342,15 +341,36 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
 
 
     // Load the building data
-    createGoogleMap(google_map_div, currentMarketObject, i);
+    createGoogleMap(google_map_div, currentMarketObject, 10, QUERIED_DATA[currentMarketObject.city], i);
+
+    // building account selector
+
+    var selected_ba = undefined;
+
+    map_button_div.append("select")
+        .attr("id", "filter_pulldown_1")
+        .attr("class", "google_map_buttons")
+        .style("opacity", 0)
+        .on("change", function() {
+            selected_ba = d3.select(this).property("value");
+        })
+        .selectAll("option")
+        .data(filter_building_accounts).enter()
+        .append("option")
+        .text(function (d, i) {
+            if (d === "Buildings") {
+                d3.select(this).property("selected", true);
+            }
+            return d;
+        });
 
 
     var filter_names = Object.keys(top_x_filter_options);
 
 
     // Initialize at top n at default
-    TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
-    var default_filter_key = "Top " + TOP_N_BUILDINGS_DEFAULT;
+    var selected_num = 10;
+    var default_filter_key = "Top " + selected_num;
 
 
     // Create Pulldown menu to filter google map
@@ -359,8 +379,7 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
         .attr("class", "google_map_buttons")
         .style("opacity", 0)
         .on("change", function() {
-            var key = d3.select(this).property("value");
-            TOP_N_BUILDINGS = top_x_filter_options[key];
+            selected_num = d3.select(this).property("value");
         })
         .selectAll("option")
         .data(filter_names).enter()
@@ -382,7 +401,7 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
         .attr("value", "Apply")
         .style("opacity", 0)
         .on("click", function() {
-            refreshGoogleMap(currentMarketObject);
+            refreshGoogleMap(currentMarketObject,selected_num,selected_ba);
         });
 
 
@@ -407,8 +426,6 @@ function checkBuilding(data, building) {
 
 
 function preInitializeGoogleMaps(currentMarketObject, clickedObject) {
-
-    TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
 
     // CHECK IF MAP ALREADY ON - IF YES, CLOSE
     if (google_map_on) {
