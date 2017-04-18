@@ -16,25 +16,17 @@
 // loading spinners
 //   http://stackoverflow.com/questions/15485127/d3-js-adding-a-loading-notification-during-ajax-request
 
-var tool_tip_minimized;
+
 var cities_off = false;
-
-
 var city_color_selected = '#6666ff';
 var city_color_hover = "#00FFFF";
 var city_color_unselected = "rgb(217,91,67)";
-
-var selected_state;
 var selected_city = {};
-
-var tooltip_width = 300;
-var tooltip_height = 200;
-
-var width = 1200;
-var height = 400;
+var width = 1000;
+var height = 600;
 
 
-
+var US_STATES_JSON;
 var QUERIED_DATA = {};
 
 
@@ -157,7 +149,7 @@ function cityClickPrimer(currentMarketObject, clickedObject) {
             // Stop spinner
             spinner.stop();
         });
-        // AJAX CITY QUERY WILL GO HERE
+
     }
     else {
         // Initialize the building visualizations - Google map and Histogram
@@ -199,6 +191,9 @@ function cityMouseOver(d) {
     if (Object.keys(selected_city).length == 0) {
         d3.select("#city_text_"+d.city).transition().duration(750).style("opacity", 1).style("display", "inline");
     }
+
+    // Highlight text in key
+    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "30px");
 }
 
 
@@ -246,8 +241,12 @@ function cityMouseOut(d) {
     if (Object.keys(selected_city).length == 0) {
         d3.select("#city_text_"+d.city).transition().duration(1000).style("opacity", 0.0).style("display", "none");
     }
+
+    // Turn down text on legend
+    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "20px");
 }
 
+var hoverInterval;
 
 
 function checkCityData(d) {
@@ -342,13 +341,16 @@ function mapCityToState(g, projection) {
 
 
 
-function initializeMainVisualization(profits_data, vis_container_id=1, scale=800) {
+
+
+
+function initializeMainVisualization(profits_data, vis_container_id=1, scale=1000) {
 
 
     var active = d3.select(null);
 
     var zoom = d3.zoom()
-        .scaleExtent([1, 10])
+        .scaleExtent([0.5, 20])
         .on("zoom", zoomed);
 
 
@@ -373,11 +375,10 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
 
     var profit_min = Math.min.apply( null, profits );
     var profit_max = Math.max.apply( null, profits );
-    var pivot_value = profit_max*0.5;
 
 
     var color = d3.scaleLinear()
-        .domain([profit_min, pivot_value, profit_max])
+        .domain([profit_min, profit_max])
         .range(["#00cc00", "#66ff66"]);
 
 
@@ -387,6 +388,9 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
         .attr("height", height)
         .style("fill", "white")
         .on("click", stopped, true);
+
+
+
 
     svg.call(zoom);
 
@@ -455,6 +459,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
             if (states_error) throw states_error;
 
             // Loop through each state data value in the .csv file
+            US_STATES_JSON = [];
             for (var i = 0; i < data.length; i++) {
 
                 // Grab Market and State Name
@@ -467,7 +472,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
                     var jsonState = json.features[j].properties.name;
 
                     if (dataState == jsonState) {
-
+                        US_STATES_JSON.push(json.features[j]);
                         // Copy the data value into the JSON
                         json.features[j].properties.selected = true;
 
@@ -478,6 +483,8 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
                     }
                 }
             }
+
+
 
             // Bind the data to the SVG and create one path per GeoJSON feature
             g.selectAll("path")
@@ -511,9 +518,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
                         //If value exists…
                         var market = d.properties.market;
                         var states_profit = profits_data[market];
-
                         var stateColor = color(states_profit);
-
                         return stateColor;
                     }
                     else {
@@ -526,6 +531,107 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
             // Map the cities
             mapCityToState(g, projection);
 
+            // Add legend
+            var legend = svg.append("g").attr("id", "legend").attr("transform", "translate(950,30)");
+
+            // Legend background
+            legend.append("rect")
+                .attr("height", 230)
+                .attr("width", 150)
+                .style("fill", "white")
+                .style("stroke", "black");
+
+            // Add Legend Title
+            legend.append("text")
+                .attr("x", 20)
+                .attr("y", 30)
+                .text("Legend")
+                .style("font-size", "28px")
+                .style("fill", "black");
+
+
+            // Add color key group to legend
+            var legend_color_resolution = 40;
+            var legend_color_array = [];
+            for (var z=0; z < legend_color_resolution; z++) {
+                legend_color_array.push(z);
+            }
+
+            var legendColorHeight = 120;
+            var colorSquare_side = legendColorHeight / legend_color_resolution;
+            var keycolor = d3.scaleLinear()
+                .domain([0, legend_color_resolution])
+                .range([profit_min, profit_max]);
+
+
+            // Create group for legend color
+            var legendColorText = legend.append("g").attr("transform", "translate(0,50)");
+
+            var y_start = 20;
+
+
+            // Actual color gradient
+            legendColorText.selectAll("rect.colorSquare")
+                .data(legend_color_array).enter()
+                .append("rect")
+                .attr("x", 10)
+                .attr("y", function(d, i) {
+                    return y_start + i*colorSquare_side;
+                })
+                .attr("class", "colorSquare")
+                .attr("height", colorSquare_side)
+                .attr("width", 50)
+                .style("fill", function(d, i) {
+                    var temp_color = keycolor(i);
+                    return color(temp_color);
+                });
+
+
+
+
+            var profit_to_position = d3.scaleLinear()
+                .domain([profit_min, profit_max])
+                .range([0, legend_color_resolution]);
+
+
+
+            // Create group for legend text
+
+
+            legendColorText.selectAll("text")
+                .data(US_STATES_JSON).enter()
+                .append("text")
+                .attr("x", 80)
+                .attr("y", function(d, i) {
+                    var market = d.properties.market;
+                    var state_profit = profits_data[market];
+                    return y_start + profit_to_position(state_profit)*colorSquare_side;
+                })
+                .attr("id", function(d, i) {
+                    var market = d.properties.market;
+                    return "market_"+market+"_legend_text";
+                })
+                .attr("class", "colorSquare")
+                .style("fill", "black")
+                .style("font-size", "16px")
+                .text(function(d, i) {
+                    return d.properties.market;
+                });
+
+            // Low profit marker
+            legendColorText.append("text")
+                .attr("x", 10)
+                .attr("y", 10)
+                .text("Low Profit")
+                .style("fill", "black");
+
+            // High profit marker
+            legendColorText.append("text")
+                .attr("x", 10)
+                .attr("y", 170)
+                .text("High Profit")
+                .style("fill", "black");
+
         });
     });
 
@@ -534,23 +640,4 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=800
 
 }
 
-
-
-
-
-//function setupBackButton(vis_container_id) {
-//  var container = d3.select("#vis_"+vis_container_id+"_button_div");
-//
-//  // Create back button
-//  container.append("input").data([vis_container_id])
-//            .attr("type", "button")
-//            .attr("value", "Back")
-//            .attr("id", function (d) {
-//              return "back_button_"+d;
-//            })
-//            .on("click", function(d) {
-//              MoveBackToMap(d);
-//            });
-//
-//}
 

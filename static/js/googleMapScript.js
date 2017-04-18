@@ -8,28 +8,40 @@ var currentGoogleMapCity;
 var google_map_zoomed = false;
 var google_map_on = false;
 var google_map_minimized = false;
+
 var map;
+var draggingGoogleMap = false;
+
+var FILTER_BACKGROUND = "#FEFEFA";
+
+var transition_timeout;
+var current_filter, current_filter_id;
+
+var map_filters = {"On Zayo" : undefined,
+    "Network Proximity" : undefined,
+    "Estimated Build Cost" : undefined};
+
+
 var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
 
-var TOP_N_BUILDINGS_DEFAULT = 3;
+
+var TOP_N_BUILDINGS_DEFAULT = 10;
 var TOP_N_BUILDINGS;
 
 var infowindow;
 var filter_key = "profit";
 
 var BUILDING_ID_TO_WINDOW = {};
-
+var buildingCircles;
 
 // Add top X filter
-var top_x_filter_options = {"Top 1" : 1,
-    "Top 2" : 2,
-    "Top 3" : 3,
-    "Top 4" : 4,
+var top_x_filter_options = {"Top 3" : 3,
     "Top 5" : 5,
-    "Top 6" : 6};
-
-var filter_building_account = ["Building", "Account"];
+    "Top 10" : 10,
+    "Top 25" : 25,
+    "Top 50" : 50,
+    "Top 100" : 100};
 
 
 
@@ -100,6 +112,8 @@ function sortByFilter(CURRENT_BUILDINGS, N=5) {
     return sorted_building_ids;
 }
 
+
+
 function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
 
     // Set current market
@@ -112,6 +126,7 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
 
 
+    buildingCircles = [];
     for (var building in CURRENT_BUILDINGS) {
 
         var building_data = CURRENT_BUILDINGS[building];
@@ -133,11 +148,12 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
 
         // Define city parameters
 
-        // Get building lat, lon and store it into myLatlng
-        var building_lat = building_data.longitude;
-        var building_lon = building_data.latitude;
 
-        var myLatlng = {"lng" : building_lon, "lat" : building_lat};
+        // Get building lat, lon and store it into myLatlng
+        var building_lat = building_data.latitude;
+        var building_lon = building_data.longitude;
+
+        var myLatlng = {"lng" : building_lat, "lat" : building_lon};
 
 
         // Add the circle for this city to the map.
@@ -156,10 +172,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
             building_id: building_data["building_id"],
             build_cost: building_data["estimated_build_cost"],
             net_proximity: building_data["network_proximity"],
-            profit: building_data["profit"]
+            profit: building_data["profit"],
 
         });
-
+        buildingCircles.push(buildingCircle);
 
         // Create info window
 
@@ -213,6 +229,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
                 var zoom_level = 15;
                 map.setCenter(this.getCenter());
 
+                for (var k=0; k < buildingCircles.length; k++) {
+                    console.log(buildingCircles[k]);
+                    buildingCircles[k].setRadius(0);
+                }
                 this.setRadius(40);
                 this.setOptions({fillOpacity : 0.5});
             }
@@ -325,29 +345,6 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
     createGoogleMap(google_map_div, currentMarketObject, i);
 
 
-
-    // Add building account filter
-    var select_ba_filter = "Building";
-
-    // Create Pulldown menu to filter google map
-    map_button_div.append("select")
-        .attr("id", "filter_pulldown_2")
-        .attr("class", "google_map_buttons")
-        .style("opacity", 0)
-        .on("change", function() {
-            select_ba_filter = d3.select(this).property("value");
-        })
-        .selectAll("option")
-        .data(filter_building_account).enter()
-        .append("option")
-        .text(function (d, i) {
-            if (d ===  "Building") {
-                d3.select(this).property("selected", true);
-            }
-            return d;
-        });
-
-
     var filter_names = Object.keys(top_x_filter_options);
 
 
@@ -369,7 +366,6 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
         .data(filter_names).enter()
         .append("option")
         .text(function (d, i) {
-            console.log(d);
             if (d === default_filter_key) {
                 d3.select(this).property("selected", true);
             }
@@ -403,10 +399,7 @@ function checkBuilding(data, building) {
 
     var current_building = data[building];
     var on_zayo = current_building.on_zayo;
-
-    var return_val = (on_zayo == "Yes") ? true : false;
-
-    return return_val;
+    return on_zayo === "Yes";
 }
 
 
