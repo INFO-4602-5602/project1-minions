@@ -4,8 +4,8 @@
 
 
 
-var HISTOGRAM_CONTAINER_HEIGHT = 300;
-var HISTOGRAM_CONTAINER_WIDTH = 600;
+var HISTOGRAM_CONTAINER_HEIGHT = 500;
+var HISTOGRAM_CONTAINER_WIDTH = 800;
 
 
 
@@ -52,8 +52,8 @@ function redrawHistogram(d) {
 
 function plotBarChart(xLbl, yLbl) {
   var w, h, xOffset, yOffset;
-  w = 400;
-  h = 300;
+  w = 700;
+  h = 400;
   xOffset = 100;
   yOffset = 50;
   var margin = 20;
@@ -78,12 +78,14 @@ function plotBarChart(xLbl, yLbl) {
 
   var xAxisG = svg.append('g')
                  .attr('class', 'axis')
+                 .attr('id', 'Xtick')
                  .attr('transform', 'translate(0, ' + (h - yOffset - margin) + ')')
-                 .call(d3.axisBottom(xScale));
+                 .call(d3.axisBottom(xScale).ticks(data_keys.length));
 
 
   var xLabel = svg.append("text")
                  .attr('class', 'label')
+                 .style('font-size', '16px')
                  .attr('x', w/2)
                  .attr('y', h - margin/2)
                  .text(xLbl);
@@ -103,11 +105,12 @@ function plotBarChart(xLbl, yLbl) {
 
   var yLabel = svg.append("text")
                  .attr('class', 'label')
-                 .attr('x', xOffset/2)
+                 .style('font-size', '16px')
+                 .attr('x', w*0.05)
                  .attr('y', h/2)
                  .text(yLbl);
 
-  var rectWidth = 30;
+  var rectWidth = (w-2*margin)/data_keys.length * 0.8;
   var rectHeight = (yScale(0) - yScale(maxYVal))/maxYVal;
 
   var histogram = svg.selectAll("g.bars")
@@ -121,20 +124,46 @@ function plotBarChart(xLbl, yLbl) {
             .attr("id", function(d, i) { return "bar_"+(i+1); })
             .attr("x", function(d, i) { return xScale(i+1) - rectWidth/2; })
             .attr("y", function(d) { return yScale(d); })
-            .attr("width" , rectWidth)
-            .attr("height", function(d) { return d*rectHeight; })
-            .on("mouseover", function(d) { 
-                d3.selectAll("#"+d3.select(this).attr('id')).style("fill", "red"); 
+            .attr("width" , function(d, i) {
+              return rectWidth;
             })
-            .on("mouseout", function(d) { 
-                d3.selectAll("#"+d3.select(this).attr('id')).style("fill", "SteelBlue"); 
+            .attr("height", function(d) { return d*rectHeight; })
+            .on("mouseover", function(d, i) { 
+                d3.selectAll("#"+d3.select(this)
+                  .attr('id'))
+                  .style("fill", "red");
+    
+                var data_key = data_keys[i].split(" ").join("_")[0]+i;
+                d3.select("#"+data_key+"_histo_label")
+                  .transition().duration(250)
+                  .style("opacity", 1);
+            })
+            .on("mouseout", function(d, i) { 
+                d3.selectAll("#"+d3.select(this)
+                   .attr('id'))
+                  .style("fill", "SteelBlue"); 
+    
+                var data_key = data_keys[i].split(" ").join("_")[0]+i;
+                d3.select("#"+data_key+"_histo_label")
+                  .transition().duration(250)
+                  .style("opacity", 0);
             });
   
-  xAxisG.append("text")
+  d3.select("#Xtick").selectAll("g").select("text").style("opacity", 0);
+  
+  // Text!
+  histogram.append("text")
+            .attr("id", function(d, i) {
+    
+              var data_key = data_keys[i].split(" ").join("_")[0]+i;
+              return data_key+"_histo_label";
+            })
             .attr("x", function(d, i) { return xScale(i+1) - rectWidth/2; })
-            .text(function(d, i) { return data_keys[i]; });
-            
-
+            .attr("y", function(d, i) {
+              return h*0.9;
+            })
+            .text(function(d, i) { return data_keys[i]; })
+            .style("opacity", 0);
  }
 
 
@@ -199,7 +228,6 @@ function initializeHistogram(d) {
               .attr("height", HISTOGRAM_CONTAINER_HEIGHT)
               .attr("width", HISTOGRAM_CONTAINER_WIDTH)
               .style("fill", "white")
-              .style("stroke", "black")
               .style("opacity", 0);
   
   
