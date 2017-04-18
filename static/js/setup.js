@@ -1,22 +1,10 @@
-var VIS_DIV_HEIGHT = 300;
-var VIS_DIV_WIDTH = 400;
-
-var VIS_SVG_CONTAINER_HEIGHT = 600;
+var VIS_SVG_CONTAINER_HEIGHT = "400px";
 var VIS_SVG_CONTAINER_WIDTH = "100%";
-
-var VIS_SVG_BACKGROUND_HEIGHT = 600;
+var VIS_SVG_BACKGROUND_HEIGHT = "100%";
 var VIS_SVG_BACKGROUND_WIDTH = "100%";
-
-var VIS_CONTAINER_NUM = 6;
-
+var VIS_CONTAINER_NUM = 4;
 var system_busy = false;
-
-
 var spinner;
-var data_load_sim_time = 1000;
-
-
-
 var MARKET_TO_STATE = { "Dallas" : "Texas",
     "Denver" : "Colorado",
     "Atlanta" : "Georgia"};
@@ -148,7 +136,7 @@ function setupVisContainer(vis_num,row_div) {
 
     var vis_div = row_div.append("div")
         .attr("id", "vis_"+vis_num+"_div")
-        .attr("class", "vis_div six columns well");
+        .attr("class", "vis_div " + (vis_num < 3 ? "twelve" : "six") + " columns well" );
 
 
 
@@ -171,11 +159,11 @@ function setupVisContainer(vis_num,row_div) {
             });
     }
 
-    // SVG DIV
-    var vis_svg_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
+
+    vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
 
     // Create vis svg container
-    if(vis_num == 2){ return ;}
+    if(vis_num === 2){ return  ;}
     createSVGContainer(vis_num);
 
 }
@@ -208,16 +196,14 @@ function initialize() {
   // Setup data load spinner
   spinnerSetup();
 
-    // Setup div for loading spinner
+  // Setup div for loading spinner
   d3.select("body").append("div").attr("id", "loading_data_div");
-  
-  
-  
-  // Create 6 containers
-  for (var vis_num=1; vis_num <= VIS_CONTAINER_NUM; vis_num++) {
-    var row_div = d3.select("#vis_row" + (1+(Math.floor((vis_num-1)/2))));
-    setupVisContainer(vis_num,row_div);
-  }
+
+  // Create 4 containers
+  setupVisContainer(1,d3.select("#vis_row1"));
+  setupVisContainer(2,d3.select("#vis_row2"));
+  setupVisContainer(3,d3.select("#vis_row3"));
+  setupVisContainer(4,d3.select("#vis_row3"));
   
 }
 
