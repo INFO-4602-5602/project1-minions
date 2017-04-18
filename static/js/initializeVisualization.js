@@ -30,7 +30,7 @@ var selected_city = {};
 var tooltip_width = 300;
 var tooltip_height = 200;
 
-var width = 550;
+var width = 1200;
 var height = 400;
 
 

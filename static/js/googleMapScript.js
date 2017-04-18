@@ -8,23 +8,9 @@ var currentGoogleMapCity;
 var google_map_zoomed = false;
 var google_map_on = false;
 var google_map_minimized = false;
-
 var map;
-var draggingGoogleMap = false;
-
-var FILTER_BACKGROUND = "#FEFEFA";
-
-var transition_timeout;
-var current_filter, current_filter_id;
-
-var map_filters = {"On Zayo" : undefined,
-    "Network Proximity" : undefined,
-    "Estimated Build Cost" : undefined};
-
-
 var buildingCircleColor = "#00ff00";
 var buildingCircleStroke = "#0000ff";
-
 
 var TOP_N_BUILDINGS_DEFAULT = 3;
 var TOP_N_BUILDINGS;
@@ -42,6 +28,8 @@ var top_x_filter_options = {"Top 1" : 1,
     "Top 4" : 4,
     "Top 5" : 5,
     "Top 6" : 6};
+
+var filter_building_account = ["Building", "Account"];
 
 
 
@@ -318,7 +306,8 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
         .append("div")
         .attr("id", "google_map_container_"+i)
         .attr("class", "google_map_container")
-        .style("opacity", 0);
+        .style("opacity", 0)
+        .style("padding-top","40px");
 
 
 
@@ -337,78 +326,26 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
 
 
 
-    // Add map minimize button
-    map_button_div.append("input").data([i])
-        .attr("id", "min_max_map_button")
+    // Add building account filter
+    var select_ba_filter = "Building";
+
+    // Create Pulldown menu to filter google map
+    map_button_div.append("select")
+        .attr("id", "filter_pulldown_2")
         .attr("class", "google_map_buttons")
-        .attr("type", "button")
-        .attr("value", "Hide Map")
         .style("opacity", 0)
-        .on("click", function(d) {
-
-            // Ensure that map doesn't get messed up if in middle of transition
-            if (transition_timeout) return;
-
-            // OPEN MAP
-            if (google_map_minimized) {
-
-                // Reopen map
-                d3.selectAll(".geoToolTip, #google_map_container_"+d)
-                    .transition().duration(750)
-                    .style("display", "block")
-                    .style("opacity", 1.0);
-
-
-
-                // Reopen buttons
-                d3.selectAll("#city_view_button, #min_max_filter_button")
-                    .transition().duration(750)
-                    .style("display", "inline")
-                    .style("opacity", 1.0);
-
-
-                // change value to Hide map
-                d3.select(this).property("value", "Hide Map");
+        .on("change", function() {
+            select_ba_filter = d3.select(this).property("value");
+        })
+        .selectAll("option")
+        .data(filter_building_account).enter()
+        .append("option")
+        .text(function (d, i) {
+            if (d ===  "Building") {
+                d3.select(this).property("selected", true);
             }
-
-            // CLOSE MAP
-            else {
-
-                // Minimize map
-                d3.selectAll(".geoToolTip, #google_map_container_"+d)
-                    .transition().duration(750)
-                    .style("opacity", 0);
-
-
-                d3.selectAll("#city_view_button, #min_max_filter_button")
-                    .transition().duration(750)
-                    .style("opacity", 0);
-
-                transition_timeout = true;
-
-                // change value to Show map
-                var this_map = d3.select(this);
-                this_map.property("value", "Hiding Map...");
-                setTimeout(function() {
-
-                        // Transition containers
-                        d3.selectAll(".geoToolTip, #google_map_container_"+d).style("display", "none");
-                        d3.selectAll("#city_view_button, #min_max_filter_button").style("display", "none");
-
-                        // Set timeout to false
-                        transition_timeout = false;
-
-                        // change value to Show map
-                        this_map.property("value", "Show Map");
-                    }
-                    , 1000);
-            }
-
-            // Update flag
-            google_map_minimized = !google_map_minimized;
-
+            return d;
         });
-
 
 
     var filter_names = Object.keys(top_x_filter_options);
@@ -416,14 +353,7 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
 
     // Initialize at top n at default
     TOP_N_BUILDINGS = TOP_N_BUILDINGS_DEFAULT;
-
-    default_filter_key = undefined;
-    for (var filter_key in top_x_filter_options) {
-        if (top_x_filter_options[filter_key] == TOP_N_BUILDINGS_DEFAULT) {
-            var default_filter_key = filter_key;
-            break;
-        }
-    }
+    var default_filter_key = "Top " + TOP_N_BUILDINGS_DEFAULT;
 
 
     // Create Pulldown menu to filter google map
@@ -439,7 +369,8 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
         .data(filter_names).enter()
         .append("option")
         .text(function (d, i) {
-            if (d == default_filter_key) {
+            console.log(d);
+            if (d === default_filter_key) {
                 d3.select(this).property("selected", true);
             }
             return d;
