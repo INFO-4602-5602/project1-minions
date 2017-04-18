@@ -28,8 +28,6 @@ var buildingCircleStroke = "#0000ff";
 
 var TOP_N_BUILDINGS_DEFAULT = 10;
 var TOP_N_BUILDINGS;
-
-var infowindow;
 var filter_key = "profit";
 
 var BUILDING_ID_TO_WINDOW = {};
@@ -125,183 +123,131 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     // Sort the current buildings by filter
     var filteredBuildingIds = sortByFilter(CURRENT_BUILDINGS, N=TOP_N_BUILDINGS);
 
+    for (var b in CURRENT_BUILDINGS) {
+        (function (building) {
+            var building_data = CURRENT_BUILDINGS[building];
+            var building_id = building_data["building_id"];
 
-    buildingCircles = [];
-    for (var building in CURRENT_BUILDINGS) {
-
-        var building_data = CURRENT_BUILDINGS[building];
-        var building_id = building_data["building_id"];
-
-        // Filter!
-        var found_building = false;
-        for (var k=0; k < filteredBuildingIds.length; k++) {
-            var x = filteredBuildingIds[k];
-            if (x == building_id) {
-                found_building = true;
-            }
-        }
-
-        if (!found_building) {
-            continue;
-        }
-
-
-        // Define city parameters
-
-
-        // Get building lat, lon and store it into myLatlng
-        var building_lat = building_data.latitude;
-        var building_lon = building_data.longitude;
-
-        var myLatlng = {"lng" : building_lat, "lat" : building_lon};
-
-
-        // Add the circle for this city to the map.
-        var buildingCircle = new google.maps.Circle({
-            strokeColor: buildingCircleStroke,
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: buildingCircleColor,
-            fillOpacity: 0.35,
-            map: map,
-            title: undefined,
-            center: myLatlng,
-            radius: 2500,
-
-            // Custom attributes
-            building_id: building_data["building_id"],
-            build_cost: building_data["estimated_build_cost"],
-            net_proximity: building_data["network_proximity"],
-            profit: building_data["profit"],
-
-        });
-        buildingCircles.push(buildingCircle);
-
-        // Create info window
-
-        // Get circle info for infowindow;
-        var building_id = buildingCircle.building_id;
-        var build_cost = buildingCircle.build_cost;
-        var net_proximity = buildingCircle.net_proximity;
-        var profit = buildingCircle.profit;
-
-        // Info window
-        infowindow_content = '<h1> Building Information </h1>' +
-            '<p> Building ID: ' + building_id + '</p>' +
-            '<p> Build Cost: ' + build_cost + '</p>' +
-            '<p> Net Proximity: ' + net_proximity + '</p>' +
-            '<p> Profit: ' + profit + '</p>';
-
-        var new_infowindow = new google.maps.InfoWindow( {
-            content: infowindow_content,
-            pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
-        });
-
-
-        // Update building ID to the new info window
-        BUILDING_ID_TO_WINDOW[building_id] = new_infowindow;
-
-
-
-
-        // CITY CLICK
-        buildingCircle.addListener('click', function() {
-
-            // Remove interval behavior, if any;
-            clearInterval(googleMouseOverInterval);
-
-            if (google_map_zoomed) {
-                google_map_zoomed = false;
-                createGoogleMap(google_map_div, d, vis_container_id);
-                MoveBackToMap(vis_container_id);
-                currentGoogleMapCity = undefined;
-            }
-            else {
-                // ACTIVATE CLICK
-                // set flags
-                google_map_zoomed = true;
-
-                // update the current google map city
-                currentGoogleMapCity = this;
-
-
-                map.setZoom(15);
-                var zoom_level = 15;
-                map.setCenter(this.getCenter());
-
-                for (var k=0; k < buildingCircles.length; k++) {
-                    console.log(buildingCircles[k]);
-                    buildingCircles[k].setRadius(0);
+            // Filter!
+            var found_building = false;
+            for (var k = 0; k < filteredBuildingIds.length; k++) {
+                var x = filteredBuildingIds[k];
+                if (x == building_id) {
+                    found_building = true;
                 }
-                this.setRadius(40);
-                this.setOptions({fillOpacity : 0.5});
-            }
-        });
-
-
-
-        // CITY MOUSEOVER
-        buildingCircle.addListener('mouseover', function() {
-
-            infowindow = BUILDING_ID_TO_WINDOW[this.building_id];
-
-            // Open the infowindow
-            infowindow.open(map, buildingCircle);
-
-            // Set hover parameters
-            var direction, rMin, rMax, time_interval, expansion_factor;
-
-            direction = 1;
-
-            // Check if zoomed or not
-            if (!google_map_zoomed) {
-                currentGoogleMapCity = this;
-                rMin = 2000;
-                rMax = 3000;
-                time_interval = 50;
-                expansion_factor = 50;
-            }
-            else {
-                rMin = 10;
-                rMax = 100;
-                time_interval = 50;
-                expansion_factor = 5;
             }
 
-
-            googleMouseOverInterval = setInterval(function() {
-                try {
-                    var radius = currentGoogleMapCity.getRadius();
-                    if ((radius > rMax) || (radius < rMin)) {
-                        direction *= -1;
-                    }
-                    currentGoogleMapCity.setRadius(radius + direction * expansion_factor);
-                }
-                catch(err) {
-                    return;
-                }
-            }, time_interval);
-        });
-
-
-        // CITY MOUSEOUT
-        buildingCircle.addListener('mouseout', function() {
-
-
-            infowindow.close();
-            infowindow = undefined;
-            if (currentGoogleMapCity == undefined) {
+            if (!found_building) {
                 return;
             }
 
-            clearInterval(googleMouseOverInterval);
 
-            // Reset radius
-            var default_radius = (google_map_zoomed) ? 40 : 2500;
-            currentGoogleMapCity.setRadius(default_radius);
+            // Define city parameters
 
-            currentGoogleMapCity = (google_map_zoomed) ? currentGoogleMapCity : undefined;
-        });
+
+            // Get building lat, lon and store it into myLatlng
+            var building_lat = building_data.latitude;
+            var building_lon = building_data.longitude;
+
+            var myLatlng = {"lng": building_lat, "lat": building_lon};
+
+
+            // Add the circle for this city to the map.
+            var buildingCircle = new google.maps.Marker({
+                map: map,
+                position: myLatlng,
+                // Custom attributes
+                building_id: building_data["building_id"],
+                build_cost: building_data["estimated_build_cost"],
+                net_proximity: building_data["network_proximity"],
+                profit: building_data["profit"],
+            });
+            // buildingCircles.push(buildingCircle);
+
+            // Create info window
+
+            // Get circle info for infowindow;
+            var building_id = buildingCircle.building_id;
+            var build_cost = buildingCircle.build_cost;
+            var net_proximity = buildingCircle.net_proximity;
+            var profit = buildingCircle.profit;
+
+            // Info window
+
+            var infowindow_content = '<div id="iw-container">' +
+                '<div class="iw-title">Building Information</div>' +
+                '<div class="iw-content">' +
+                '<div class="iw-subTitle">building_id</div>' +
+                '<p> Build Cost: ' + build_cost + '<br\>' +
+                'Net Proximity:  ' + net_proximity + '<br\>' +
+                'Profit: ' + profit + '</p>' +
+                '</div>' +
+                '<div class="iw-bottom-gradient"></div>' +
+                '</div>';
+
+            // Update building ID to the new info window
+            var infowindow = new google.maps.InfoWindow({
+                content: infowindow_content
+                // position: new google.maps.LatLng(building_lat, building_lon),
+                // pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
+            });
+
+
+            google.maps.event.addListener(buildingCircle, 'click', function() {
+                infowindow.open(map,buildingCircle);
+            });
+
+            google.maps.event.addListener(map, 'click', function() {
+                infowindow.close();
+            });
+
+            google.maps.event.addListener(infowindow, 'domready', function() {
+
+                // Reference to the DIV that wraps the bottom of infowindow
+                var iwOuter = $('.gm-style-iw');
+
+                /* Since this div is in a position prior to .gm-div style-iw.
+                 * We use jQuery and create a iwBackground variable,
+                 * and took advantage of the existing reference .gm-style-iw for the previous div with .prev().
+                 */
+                var iwBackground = iwOuter.prev();
+
+                // Removes background shadow DIV
+                iwBackground.children(':nth-child(2)').css({'display' : 'none'});
+
+                // Removes white background DIV
+                iwBackground.children(':nth-child(4)').css({'display' : 'none'});
+
+                // Moves the infowindow 115px to the right.
+                iwOuter.parent().parent().css({left: '115px'});
+
+                // Moves the shadow of the arrow 76px to the left margin.
+                iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+
+                // Moves the arrow 76px to the left margin.
+                iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+
+                // Changes the desired tail shadow color.
+                iwBackground.children(':nth-child(3)').find('div').children().css({'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px', 'z-index' : '1'});
+
+                // Reference to the div that groups the close button elements.
+                var iwCloseBtn = iwOuter.next();
+
+                // Apply the desired effect to the close button
+                iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
+
+                // If the content of infowindow not exceed the set maximum height, then the gradient is removed.
+                if($('.iw-content').height() < 140){
+                    $('.iw-bottom-gradient').css({display: 'none'});
+                }
+
+                // The API automatically applies 0.7 opacity to the button after the mouseout event. This function reverses this event to the desired value.
+                iwCloseBtn.mouseout(function(){
+                    $(this).css({opacity: '1'});
+                });
+            });
+
+        })(b);
     }
 }
 
