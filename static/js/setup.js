@@ -154,7 +154,7 @@ function setupVisContainer(vis_num,row_div) {
 
 
     // BUTTON DIV
-    var vis_button_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_button_div");
+    var vis_button_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_button_div").attr("style","padding-bottom:20px");
 
     if (vis_num === 1) {
         // Create Vis Button
@@ -175,6 +175,7 @@ function setupVisContainer(vis_num,row_div) {
     var vis_svg_div = vis_div.append("div").attr("id", "vis_"+vis_num+"_svg_div");
 
     // Create vis svg container
+    if(vis_num == 2){ return ;}
     createSVGContainer(vis_num);
 
 }
@@ -207,8 +208,7 @@ function initialize() {
   // Setup data load spinner
   spinnerSetup();
 
-
-  // Setup div for loading spinner 
+    // Setup div for loading spinner
   d3.select("body").append("div").attr("id", "loading_data_div");
   
   

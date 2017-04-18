@@ -93,7 +93,7 @@ function sortByFilter(CURRENT_BUILDINGS, N=5) {
     for (var bldg_index=0; bldg_index < CURRENT_BUILDINGS.length; bldg_index++) {
         var current_bldg = CURRENT_BUILDINGS[bldg_index];
 
-        var bldg_id = current_bldg["building-id"];
+        var bldg_id = current_bldg["building_id"];
         var filter_attr = current_bldg[filter_key];
         sortable.push([bldg_id, filter_attr]);
     }
@@ -127,7 +127,7 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
     for (var building in CURRENT_BUILDINGS) {
 
         var building_data = CURRENT_BUILDINGS[building];
-        var building_id = building_data["building-id"];
+        var building_id = building_data["building_id"];
 
         // Filter!
         var found_building = false;
@@ -146,8 +146,8 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
         // Define city parameters
 
         // Get building lat, lon and store it into myLatlng
-        var building_lat = building_data.latitude;
-        var building_lon = building_data.longitude;
+        var building_lat = building_data.longitude;
+        var building_lon = building_data.latitude;
 
         var myLatlng = {"lng" : building_lon, "lat" : building_lat};
 
@@ -165,10 +165,10 @@ function generateBuildingsOnMap(google_map_div, d, vis_container_id) {
             radius: 2500,
 
             // Custom attributes
-            building_id: building_data["building-id"],
-            build_cost: building_data["build cost"],
-            net_proximity: building_data["net prox"],
-            profit: building_data["profit"],
+            building_id: building_data["building_id"],
+            build_cost: building_data["estimated_build_cost"],
+            net_proximity: building_data["network_proximity"],
+            profit: building_data["profit"]
 
         });
 
