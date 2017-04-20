@@ -305,7 +305,7 @@ function drawAccounts(filteredIds, ba_data){
                     map: map,
                     position: myLatlng,
                     // Custom attributes
-                    building_id: account_data["account_id"],
+                    account_id: account_data["account_id"],
                     revenue: account_data["annual_revenue"],
                     profit: account_data["profit"],
                     icon: iUrl
