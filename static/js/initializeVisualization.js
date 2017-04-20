@@ -102,7 +102,8 @@ function initializeBuildingVisualizations(currentMarketObject, clickedObject) {
     preInitializeGoogleMaps(currentMarketObject, clickedObject);
 
     // Setup the building HISTOGRAM
-    initializeBuildingHistogram(currentMarketObject, clickedObject);
+    // initializeBuildingHistogram(currentMarketObject, clickedObject);
+    initializeBuildingPieChart(currentMarketObject);
 }
 
 

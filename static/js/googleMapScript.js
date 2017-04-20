@@ -191,10 +191,10 @@ function drawBuildings(filteredIds, ba_data){
             var infowindow_content = '<div id="iw-container">' +
                 '<div class="iw-title">Building Information</div>' +
                 '<div class="iw-content">' +
-                '<div class="iw-subTitle">building_id</div>' +
+                '<div class="iw-subTitle">' +building_id +'</div>' +
                 '<p> Build Cost: ' + build_cost + '<br\>' +
                 'Net Proximity:  ' + net_proximity + '<br\>' +
-                'Profit: ' + profit + '</p>' +
+                'Profit: ' + profit + '$</p>' +
                 '</div>' +
                 '<div class="iw-bottom-gradient"></div>' +
                 '</div>';
@@ -325,8 +325,8 @@ function drawAccounts(filteredIds, ba_data){
                     '<div class="iw-title">Account Information</div>' +
                     '<div class="iw-content">' +
                     '<div class="iw-subTitle">account_id ' + account_id + '</div>' +
-                    'Revenue:  ' + revenue + '<br\>' +
-                    'Profit: ' + profit + '</p>' +
+                    'Revenue:  ' + revenue + '$<br\>' +
+                    'Profit: ' + profit + '$</p>' +
                     '</div>' +
                     '<div class="iw-bottom-gradient"></div>' +
                     '</div>';

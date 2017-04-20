@@ -43,7 +43,7 @@ function addRemoveSetupButtons(vis_num=1) {
                     return "create_vis_button";
                 })
                 .attr("type", "button")
-                .attr("value", "Create New Visualization")
+                .attr("value", "Analyze")
                 .on("click", function(d) {
                     if (system_busy) { console.log("BUSY!"); return; }
                     initializeMainVisData();
@@ -151,7 +151,7 @@ function setupVisContainer(vis_num,row_div) {
                 return "create_vis_button";
             })
             .attr("type", "button")
-            .attr("value", "Create New Visualization")
+            .attr("value", "Analyze")
             .on("click", function(d) {
                 if (system_busy) { console.log("BUSY!"); return; }
 
