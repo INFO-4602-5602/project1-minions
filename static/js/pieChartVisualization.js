@@ -1,4 +1,4 @@
-var PIECHART_CONTAINER_HEIGHT = 400;
+var PIECHART_CONTAINER_HEIGHT = 500;
 var PIECHART_CONTAINER_WIDTH = 500;
 
 var buildingPieChartOptions = {"Net Classification" : "net_classification",
@@ -6,65 +6,31 @@ var buildingPieChartOptions = {"Net Classification" : "net_classification",
 
 var buildingPieChartKeys = Object.keys(buildingPieChartOptions);
 
-function getHistogramData(buildings) {
-    var pre_histo_data = []
+function getPieChartData(buildings) {
+    var pre_pie_data = []
+
     for (var i=0; i < buildings.length; i++) {
         var current_building = buildings[i];
-
-        var selection_id = buildingHistogramOptions[current_building_histogram_selection];
-
-        var current_data = current_building[selection_id];
-        pre_histo_data.push(current_data);
+        var current_data = current_building[buildingPieChartOptions[current_building_piechart_selection]];
+        pre_pie_data.push(current_data);
     }
 
-
-    histogram_data = {};
-    for (var i=0; i < pre_histo_data.length; i++) {
-        var current = pre_histo_data[i];
-        if (current in histogram_data) {
-            histogram_data[current] += 1;
+    pie_data = {};
+    for (var i=0; i < pre_pie_data.length; i++) {
+        var current = pre_pie_data[i];
+        if (current in pie_data) {
+            pie_data[current] += 1;
         }
         else {
-            histogram_data[current] = 1;
+            pie_data[current] = 1;
         }
     }
-}
 
-function getPieChartData(){
-    return  [
-        {
-            "label": "One",
-            "value" : 29.765957771107
-        } ,
-        {
-            "label": "Two",
-            "value" : 0
-        } ,
-        {
-            "label": "Three",
-            "value" : 32.807804682612
-        } ,
-        {
-            "label": "Four",
-            "value" : 196.45946739256
-        } ,
-        {
-            "label": "Five",
-            "value" : 0.19434030906893
-        } ,
-        {
-            "label": "Six",
-            "value" : 98.079782601442
-        } ,
-        {
-            "label": "Seven",
-            "value" : 13.925743130903
-        } ,
-        {
-            "label": "Eight",
-            "value" : 5.1387322875705
-        }
-    ];
+    result = [];
+    for(var key in pie_data) {
+        result.push({"label":key, "value":pie_data[key]})
+    }
+    return result;
 }
 
 function redrawPieChart(d) {
@@ -90,14 +56,13 @@ function initializePieChart(d) {
         .attr("class", "piechart")
         .attr("height", PIECHART_CONTAINER_HEIGHT)
         .attr("width", PIECHART_CONTAINER_WIDTH)
-        .attr("id", "piechart_group")
-        .attr("transform", "translate(50, 100)");
+        .attr("id", "piechart_group");
 
     // Select correct city data from the queried data
     var buildings = QUERIED_DATA[d.city];
 
     // Populate histogram with data
-    plotPieChart();
+    plotPieChart(buildings);
 
     // Transition - fade it all in
     d3.selectAll(".piechart")
@@ -106,15 +71,12 @@ function initializePieChart(d) {
         .style("opacity", 1);
 }
 
-function plotPieChart() {
+function plotPieChart(buildings) {
 
+    var data = getPieChartData(buildings);
     var pie = new d3pie("piechart_group", {
         "data": {
-            "content": [
-                {"label":"Master Course","value":2807},
-                {"label":"Affiliates", "value":1072},
-                {"label":"Ebook", "value": 972}
-            ]
+            "content": data
         }
     });
 }

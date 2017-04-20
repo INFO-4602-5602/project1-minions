@@ -1,8 +1,7 @@
-var VIS_SVG_CONTAINER_HEIGHT = "400px";
+var VIS_SVG_CONTAINER_HEIGHT = "500px";
 var VIS_SVG_CONTAINER_WIDTH = "100%";
 var VIS_SVG_BACKGROUND_HEIGHT = "100%";
 var VIS_SVG_BACKGROUND_WIDTH = "100%";
-var VIS_CONTAINER_NUM = 4;
 var system_busy = false;
 var spinner;
 var MARKET_TO_STATE = { "Dallas" : "Texas",
