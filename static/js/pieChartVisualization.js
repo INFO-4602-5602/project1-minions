@@ -7,7 +7,10 @@ var PieChartOptions = {
     "Account": {"Industry": "industry",
         "Vertical": "vertical" },
     "Opportunity": {"Stage Name": "stage_name",
-        "Product Group": "product_group"}
+        "Product Group": "product_group",
+    "Opportunity Type": "opportunity_type",
+    "Is Won": "is_won",
+    "IS Closed": "is_closed"}
 };
 
 function getPieChartData(data, type) {
