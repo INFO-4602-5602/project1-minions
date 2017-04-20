@@ -111,9 +111,10 @@ def market_profits():
 @app.route('/opportunities/', methods=['POST'])
 def opportunities():
     req_data = json.loads(request.data)
-    opps = Opportunity().query.filter(Opportunity.account_id.in_(req_data)).all()
+    opps1 = Opportunity().query.filter(Opportunity.account_id.in_(req_data)).all()
+    opps2 = Opportunity().query.filter(Opportunity.building_id.in_(req_data)).all()
     os = OpportunitySchema()
-    return jsonify(result=os.dump(opps, many=True).data)
+    return jsonify(result=os.dump(opps1 + opps2, many=True).data)
 
 
 @app.route('/initialize')
