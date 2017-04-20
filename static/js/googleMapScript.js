@@ -419,9 +419,27 @@ function generateBAsOnMap(num_filter, data) {
     // Sort the current buildings by filter
     var filteredIds = sortByFilter(data, num_filter);
     if(data[0]["building_id"]) {
-        drawBuildings(filteredIds, data)
+        drawBuildings(filteredIds, data);
+        var filt_data = [];
+        for(var i=0;i<filteredIds.length;i++){
+            for(var j=0;j<data.length;j++) {
+                if(filteredIds[i] === data[j]["building_id"]){
+                    filt_data.push(data[i])
+                }
+            }
+        }
+        initializePieChart(filt_data, "Building");
     }else{
-        drawAccounts(filteredIds, data)
+        drawAccounts(filteredIds, data);
+        var filt_data = [];
+        for(var i=0;i<filteredIds.length;i++){
+            for(var j=0;j<data.length;j++) {
+                if(filteredIds[i] === data[j]["account_id"]){
+                    filt_data.push(data[i])
+                }
+            }
+        }
+        initializePieChart(filt_data, "Account");
     }
 
 
