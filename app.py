@@ -3,13 +3,14 @@
 # ----------------------------------------------------------------------------#
 
 from flask import Flask, render_template, jsonify, request
-from models import db_session, Building, Accounts, Sites, BuildingSchema2, BuildingSchema, AccountSchema,\
+from models import db_session, Opportunity,Building, Accounts, Sites, BuildingSchema2, BuildingSchema, AccountSchema,\
     AccountSchema2, SitesSchema, CPQSchema, OpportunitySchema, ServiceSchema
 import csv
 import os
 from re import sub
 from decimal import Decimal
 import sys
+import json
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -105,6 +106,14 @@ def market_profits():
         resp.set_cookie(m, str(profits_json[m]))
 
     return resp
+
+
+@app.route('/opportunities/', methods=['POST'])
+def opportunities():
+    req_data = json.loads(request.data)
+    opps = Opportunity().query.filter(Opportunity.account_id.in_(req_data)).all()
+    os = OpportunitySchema()
+    return jsonify(result=os.dump(opps, many=True).data)
 
 
 @app.route('/initialize')

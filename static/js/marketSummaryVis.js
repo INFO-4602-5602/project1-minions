@@ -7,38 +7,42 @@ function writeStats(stats) {
   d3.select(".summary").remove();
   
   // Set svg cotainer
-  var svg_container = d3.select("#vis_4_svg_container");
+  var svg_container = d3.select("#vis_1_svg_container");
   
   // Declare states group
-  var stats_group = svg_container.append("g").attr("class", "summary");
-  
+  var stats_group = svg_container.append("g")
+        .attr("class", "summary")
+        .attr("transform", "translate(830,340)");
+
+  stats_group.append("rect")
+        .attr("height", 250)
+        .attr("width", 290)
+        .style("fill", "white")
+        .style("stroke", "black")
+        .style("opacity", "0.5");
+
   // Write out the summary text
+
   stats_group.append("text")
-              .selectAll("tspan")
-                .data(stats).enter()
-              .append("tspan") 
-                .attr("x", 5)
-                .attr("y", function(d, i)
-                {
-                  return 30 + i*30;
-                })
-                .attr("transform", "translate(20, 0)")
-                .text(function(d) { return d; })
-                .on("mouseover", function()
-                {
-                  d3.select(this)
-                        .style("font-size", "20px");
-                })
-                .on("mouseout", function()
-                {
-                  d3.select(this)
-                        .style("fill", "black")
-                        .style("font-size", "16px");
-                })
-                .on("click", function(d)
-                {
-                  
-                });
+        .attr("x", 70)
+        .attr("y", 30)
+        .text("Summary")
+        .style("font-size", "28px")
+        .style("fill", "black");
+
+  stats_group.append("text")
+            .selectAll("tspan")
+            .data(stats).enter()
+            .append("tspan")
+            .attr("x", 30)
+            .attr("y", function(d, i)
+            {
+              return 60 + i*30;
+            })
+            .attr("transform", "translate(20, 0)")
+            .style("fill", "black")
+            .style("font-size", "10px")
+            .text(function(d) { return d; });
 }
 
 

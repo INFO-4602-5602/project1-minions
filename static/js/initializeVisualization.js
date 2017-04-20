@@ -534,14 +534,15 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=100
             mapCityToState(g, projection);
 
             // Add legend
-            var legend = svg.append("g").attr("id", "legend").attr("transform", "translate(950,30)");
+            var legend = svg.append("g").attr("id", "legend").attr("transform", "translate(970,10)");
 
             // Legend background
             legend.append("rect")
                 .attr("height", 230)
                 .attr("width", 150)
                 .style("fill", "white")
-                .style("stroke", "black");
+                .style("stroke", "black")
+                .style("opacity", "0.5");
 
             // Add Legend Title
             legend.append("text")
