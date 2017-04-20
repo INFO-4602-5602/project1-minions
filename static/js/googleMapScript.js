@@ -418,6 +418,15 @@ function generateBAsOnMap(num_filter, data) {
 
     // Sort the current buildings by filter
     var filteredIds = sortByFilter(data, num_filter);
+    $.ajax({
+        type: 'POST',
+        url: "/opportunities/",
+        contentType: "application/json",
+        data: JSON.stringify(filteredIds),
+        success: function(data){
+            initializePieChart(data["result"], "Opportunity");
+        }
+    });
     if(data[0]["building_id"]) {
         drawBuildings(filteredIds, data);
         var filt_data = [];
