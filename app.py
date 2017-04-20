@@ -55,6 +55,11 @@ def building_profits(market):
                     b_json['profit'] += c.x36_npv_list
                 else:
                     b_json['profit'] = c.x36_npv_list
+
+            acc_set = set()
+            for s in r.sites:
+                acc_set.add(s.account_id)
+            b_json['accounts'] = list(acc_set)
             building_profits_json.append(b_json)
         except Exception as e:
             print "Unexpected Exception occurred while building profits json"+ str(e)

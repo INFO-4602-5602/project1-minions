@@ -192,7 +192,7 @@ function cityMouseOver(d) {
     }
 
     // Highlight text in key
-    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "30px");
+    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "20px");
 }
 
 
@@ -242,7 +242,7 @@ function cityMouseOut(d) {
     }
 
     // Turn down text on legend
-    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "20px");
+    d3.select("#market_"+d.city+"_legend_text").transition().duration(750).style("font-size", "15px");
 }
 
 var hoverInterval;
@@ -378,7 +378,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=100
 
     var color = d3.scaleLinear()
         .domain([profit_min, profit_max])
-        .range(["#00cc00", "#66ff66"]);
+        .range(["#66ff66", "#006600"]);
 
 
 
@@ -613,7 +613,7 @@ function initializeMainVisualization(profits_data, vis_container_id=1, scale=100
                 })
                 .attr("class", "colorSquare")
                 .style("fill", "black")
-                .style("font-size", "16px")
+                .style("font-size", "15px")
                 .text(function(d, i) {
                     return d.properties.market;
                 });

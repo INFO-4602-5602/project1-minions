@@ -56,9 +56,11 @@ function calculateSummaryStats(d) {
   var average_build_cost = 0.0;
   var average_profit = 0.0;
   var total_profit = 0.0;
+  var accounts = new Set();
+  var n_sites = 0;
   
   // Initialize num of buildings
-  var num_buildings = buildings.length
+  var num_buildings = buildings.length;
   
   for (var i=0; i < num_buildings; i++) {
     var current_building = buildings[i];
@@ -70,14 +72,18 @@ function calculateSummaryStats(d) {
     
     // Total profit
     total_profit += current_building["profit"];
+    for(var j=0;j<current_building["accounts"].length;j++){
+        accounts.add(current_building["accounts"][j]);
+    }
+    n_sites += current_building["sites"].length;
   }
   
   // Average profit
   average_profit = total_profit / num_buildings;
   
   var stats = ["Number of Buildings: " + num_buildings,
-               "Number of Accounts: " + "ADD TO QUERY RETURN",
-               "Number of Sites: " + "ADD TO QUERY RETURN",
+               "Number of Accounts: " + accounts.size,
+               "Number of Sites: " + n_sites,
                "Average build cost: " + average_build_cost,
                "Average network proximity: " + average_network_prox,
                "Average profit: " + average_profit,
