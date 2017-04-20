@@ -28,6 +28,7 @@ var height = 600;
 
 var US_STATES_JSON;
 var QUERIED_DATA = {};
+var QUERIED_DATA_ACCOUNTS = {};
 
 
 

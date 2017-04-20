@@ -29,7 +29,14 @@ var top_x_filter_options = {"Top 3" : 3,
     "Top 50" : 50,
     "Top 100" : 100};
 
-
+var icon_urls = ['/static/ico/blue.png'
+    , '/static/ico/green.png'
+    , '/static/ico/lightblue.png'
+    , '/static/ico/orange.png'
+    , '/static/ico/pink.png'
+    , '/static/ico/purple.png'
+    , '/static/ico/red.png'
+    , '/static/ico/yellow.png'];
 
 
 function closeGoogleMap() {
@@ -40,7 +47,7 @@ function closeGoogleMap() {
 
 
 
-function createGoogleMap(google_map_div, cityObject, number_filter, data, vis_container_id) {
+function createGoogleMap(google_map_div, cityObject, number_filter, data) {
 
     // Set current market, state lat, and state lon
     var state_lat = cityObject.lat;
@@ -50,14 +57,22 @@ function createGoogleMap(google_map_div, cityObject, number_filter, data, vis_co
     google_map_zoomed = false;
 
     // Create the Google Map…
-    map = new google.maps.Map(google_map_div.node(), {
-        zoom: 9,
-        center: new google.maps.LatLng(state_lat, -1*state_lon),
-        mapTypeId: google.maps.MapTypeId.TERRAIN
-    });
+    if(data[0]["building_id"]) {
+        map = new google.maps.Map(google_map_div.node(), {
+            zoom: 9,
+            center: new google.maps.LatLng(state_lat, -1 * state_lon),
+            mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+    }else{
+        map = new google.maps.Map(google_map_div.node(), {
+            zoom: 3,
+            center: new google.maps.LatLng(37.09024, -95.712891),
+            mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+    }
 
     // Generate buildings
-    generateBAsOnMap(google_map_div, cityObject, vis_container_id, number_filter, data);
+    generateBAsOnMap(number_filter, data);
 
 }
 
@@ -68,17 +83,21 @@ function refreshGoogleMap(cityObject,number_filter,ba_filter) {
     google_map_zoomed = false;
 
     if(ba_filter === "Accounts") {
-
-        var target = document.getElementById("loading_data_div");
-        spinner.spin(target);
-        $.get("/account_profits/" + cityObject.city, function (data) {
-            spinner.stop();
-            system_busy = false;
-            createGoogleMap(google_map_div, cityObject, number_filter, data["result"], vis_container_id);
+        if(!QUERIED_DATA_ACCOUNTS[cityObject.city]) {
+            var target = document.getElementById("loading_data_div");
+            spinner.spin(target);
+            $.get("/account_profits/" + cityObject.city, function (data) {
+                spinner.stop();
+                system_busy = false;
+                QUERIED_DATA_ACCOUNTS[cityObject.city] = data["result"];
+                createGoogleMap(google_map_div, cityObject, number_filter, data["result"], vis_container_id);
+                MoveBackToMap(vis_container_id);
+                currentGoogleMapCity = undefined;
+            });
+        }else{
+            createGoogleMap(google_map_div, cityObject, number_filter, QUERIED_DATA_ACCOUNTS[cityObject.city], vis_container_id);
             MoveBackToMap(vis_container_id);
-            currentGoogleMapCity = undefined;
-        });
-
+        }
     }else {
         createGoogleMap(google_map_div, cityObject, number_filter, QUERIED_DATA[cityObject.city], vis_container_id);
         MoveBackToMap(vis_container_id);
@@ -90,8 +109,9 @@ function refreshGoogleMap(cityObject,number_filter,ba_filter) {
 
 
 
-function sortByFilter(ba_data, N=5) {
+function sortByFilter(ba_data, num_filter) {
     var sortable = [];
+    var N = parseInt(num_filter.split(" ")[1]);
     for (var ba_index=0; ba_index < ba_data.length; ba_index++) {
         var current_ba = ba_data[ba_index];
         var ba_id = undefined;
@@ -116,24 +136,16 @@ function sortByFilter(ba_data, N=5) {
     return sorted_ba_ids;
 }
 
-function generateBAsOnMap(google_map_div, d, vis_container_id, num_filter, data) {
-
-    // USE THE QUERY DATA HERE
-    var ba_data = data;
-
-    // Sort the current buildings by filter
-    var filteredBuildingIds = sortByFilter(ba_data, num_filter);
-
-
-    for (var b in CURRENT_BUILDINGS) {
+function drawBuildings(filteredIds, ba_data){
+    for (var b in ba_data) {
         (function (building) {
-            var building_data = CURRENT_BUILDINGS[building];
+            var building_data = ba_data[building];
             var building_id = building_data["building_id"];
 
             // Filter!
             var found_building = false;
-            for (var k = 0; k < filteredBuildingIds.length; k++) {
-                var x = filteredBuildingIds[k];
+            for (var k = 0; k < filteredIds.length; k++) {
+                var x = filteredIds[k];
                 if (x == building_id) {
                     found_building = true;
                 }
@@ -169,7 +181,7 @@ function generateBAsOnMap(google_map_div, d, vis_container_id, num_filter, data)
             // Create info window
 
             // Get circle info for infowindow;
-            var building_id = buildingCircle.building_id;
+            building_id = buildingCircle.building_id;
             var build_cost = buildingCircle.build_cost;
             var net_proximity = buildingCircle.net_proximity;
             var profit = buildingCircle.profit;
@@ -221,7 +233,7 @@ function generateBAsOnMap(google_map_div, d, vis_container_id, num_filter, data)
                 iwBackground.children(':nth-child(4)').css({'display' : 'none'});
 
                 // Moves the infowindow 115px to the right.
-                iwOuter.parent().parent().css({left: '115px'});
+                iwOuter.parent().parent().css({left: '50px'});
 
                 // Moves the shadow of the arrow 76px to the left margin.
                 iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
@@ -251,6 +263,168 @@ function generateBAsOnMap(google_map_div, d, vis_container_id, num_filter, data)
 
         })(b);
     }
+}
+
+function drawAccounts(filteredIds, ba_data){
+    for (var a in ba_data) {
+        for (var b in ba_data[a]["building_list"]) {
+            (function (account, building) {
+                var account_data = ba_data[account];
+                var account_id = account_data["account_id"];
+
+                // Filter!
+                var found_account = false;
+                var found_index = 0
+                for (var k = 0; k < filteredIds.length; k++) {
+                    if (filteredIds[k] === account_id) {
+                        found_account = true;
+                        found_index = k;
+                    }
+                }
+
+                if (!found_account) {
+                    return;
+                }
+
+
+                // Define city parameters
+
+
+                // Get building lat, lon and store it into myLatlng
+                var latlong = ba_data[account]["building_list"][building].split(",");
+                var building_lat = parseFloat(latlong[0]);
+                var building_lon = parseFloat(latlong[1]);
+
+                var myLatlng = {"lng": building_lat, "lat": building_lon};
+
+                var iUrl = icon_urls[found_index%8]
+
+
+                // Add the circle for this city to the map.
+                var accountcircle = new google.maps.Marker({
+                    map: map,
+                    position: myLatlng,
+                    // Custom attributes
+                    building_id: account_data["account_id"],
+                    revenue: account_data["annual_revenue"],
+                    profit: account_data["profit"],
+                    icon: iUrl
+                });
+                // buildingCircles.push(buildingCircle);
+
+                // Create info window
+
+                // Get circle info for infowindow;
+                account_id = accountcircle.account_id;
+                var revenue = accountcircle.revenue;
+                var profit = accountcircle.profit;
+
+                // Info window
+
+                var infowindow_content = '<div id="iw-container">' +
+                    '<div class="iw-title">Account Information</div>' +
+                    '<div class="iw-content">' +
+                    '<div class="iw-subTitle">account_id ' + account_id + '</div>' +
+                    'Revenue:  ' + revenue + '<br\>' +
+                    'Profit: ' + profit + '</p>' +
+                    '</div>' +
+                    '<div class="iw-bottom-gradient"></div>' +
+                    '</div>';
+
+                // Update building ID to the new info window
+                var infowindow = new google.maps.InfoWindow({
+                    content: infowindow_content
+                    // position: new google.maps.LatLng(building_lat, building_lon),
+                    // pixelOffset: {width: 200, height: 200, j: "px", f: "px"}
+                });
+
+
+                google.maps.event.addListener(accountcircle, 'click', function () {
+                    infowindow.open(map, accountcircle);
+                });
+
+                google.maps.event.addListener(map, 'click', function () {
+                    infowindow.close();
+                });
+
+                google.maps.event.addListener(infowindow, 'domready', function () {
+
+                    // Reference to the DIV that wraps the bottom of infowindow
+                    var iwOuter = $('.gm-style-iw');
+
+                    /* Since this div is in a position prior to .gm-div style-iw.
+                     * We use jQuery and create a iwBackground variable,
+                     * and took advantage of the existing reference .gm-style-iw for the previous div with .prev().
+                     */
+                    var iwBackground = iwOuter.prev();
+
+                    // Removes background shadow DIV
+                    iwBackground.children(':nth-child(2)').css({'display': 'none'});
+
+                    // Removes white background DIV
+                    iwBackground.children(':nth-child(4)').css({'display': 'none'});
+
+                    // Moves the infowindow 115px to the right.
+                    iwOuter.parent().parent().css({left: '50px'});
+
+                    // Moves the shadow of the arrow 76px to the left margin.
+                    iwBackground.children(':nth-child(1)').attr('style', function (i, s) {
+                        return s + 'left: 76px !important;'
+                    });
+
+                    // Moves the arrow 76px to the left margin.
+                    iwBackground.children(':nth-child(3)').attr('style', function (i, s) {
+                        return s + 'left: 76px !important;'
+                    });
+
+                    // Changes the desired tail shadow color.
+                    iwBackground.children(':nth-child(3)').find('div').children().css({
+                        'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px',
+                        'z-index': '1'
+                    });
+
+                    // Reference to the div that groups the close button elements.
+                    var iwCloseBtn = iwOuter.next();
+
+                    // Apply the desired effect to the close button
+                    iwCloseBtn.css({
+                        opacity: '1',
+                        right: '38px',
+                        top: '3px',
+                        border: '7px solid #48b5e9',
+                        'border-radius': '13px',
+                        'box-shadow': '0 0 5px #3990B9'
+                    });
+
+                    // If the content of infowindow not exceed the set maximum height, then the gradient is removed.
+                    if ($('.iw-content').height() < 140) {
+                        $('.iw-bottom-gradient').css({display: 'none'});
+                    }
+
+                    // The API automatically applies 0.7 opacity to the button after the mouseout event. This function reverses this event to the desired value.
+                    iwCloseBtn.mouseout(function () {
+                        $(this).css({opacity: '1'});
+                    });
+                });
+
+            })(a,b);
+        }
+    }
+}
+
+
+
+function generateBAsOnMap(num_filter, data) {
+
+    // Sort the current buildings by filter
+    var filteredIds = sortByFilter(data, num_filter);
+    if(data[0]["building_id"]) {
+        drawBuildings(filteredIds, data)
+    }else{
+        drawAccounts(filteredIds, data)
+    }
+
+
 }
 
 
@@ -290,7 +464,7 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
 
 
     // Load the building data
-    createGoogleMap(google_map_div, currentMarketObject, 10, QUERIED_DATA[currentMarketObject.city], i);
+    createGoogleMap(google_map_div, currentMarketObject, "Top 10", QUERIED_DATA[currentMarketObject.city], i);
 
     // building account selector
 
@@ -318,8 +492,8 @@ function initializeGoogleMap(i, currentMarketObject, clickedObject) {
 
 
     // Initialize at top n at default
-    var selected_num = 10;
-    var default_filter_key = "Top " + selected_num;
+    var selected_num = "Top 10";
+    var default_filter_key = "Top 10";
 
 
     // Create Pulldown menu to filter google map
